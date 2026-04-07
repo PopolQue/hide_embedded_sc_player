@@ -6,13 +6,13 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    open: '/shell.html',
+    open: '/',
   },
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        shell: resolve(__dirname, 'public/shell.html'),
+        landing: resolve(__dirname, 'public/landing.html'),
       },
     },
   },

@@ -1,15 +1,1129 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/raupe_kuh_2025.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klein und Haarig</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://w.soundcloud.com/player/api.js"></script>
-    <script type="module" src="/src/main.tsx"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .shell-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            min-height: 0;
+        }
+
+        /* Player Bar */
+        .player-bar {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            height: 80px;
+            padding: 0 20px;
+            gap: 20px;
+            background: #1a1a24;
+            border-top: 1px solid #333842;
+            flex-shrink: 0;
+        }
+
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            min-width: 0;
+        }
+
+        .track-artwork {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .track-artwork.placeholder {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .track-artwork.placeholder svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .track-text {
+            min-width: 0;
+        }
+
+        .track-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .year-select {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffffde;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .year-select:hover {
+            border-color: #aa3bff;
+        }
+
+        .year-select:focus {
+            border-color: #aa3bff;
+            box-shadow: 0 0 0 2px rgba(170, 59, 255, 0.3);
+        }
+
+        .year-select option {
+            background: #1a1a24;
+            color: #ffffffde;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #ffffffde;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .control-btn.play {
+            background: #aa3bff;
+            width: 40px;
+            height: 40px;
+        }
+
+        .control-btn.play:hover {
+            background: #9a2bff;
+        }
+
+        .progress-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time {
+            font-size: 11px;
+            color: #9ca3af;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #aa3bff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .hidden-iframe {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        /* Track Explorer Panel */
+        .explorer-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            max-height: 400px;
+            background: #242430;
+            border-top: 1px solid #333842;
+            border-left: 1px solid #333842;
+            border-radius: 8px 0 0 0;
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .explorer-panel.open {
+            display: flex;
+        }
+
+        .explorer-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #333842;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explorer-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffffde;
+        }
+
+        .explorer-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 18px;
+        }
+
+        .explorer-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .explorer-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .explorer-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .track-item.active {
+            background: rgba(170, 59, 255, 0.15);
+        }
+
+        .track-item-num {
+            font-size: 12px;
+            color: #9ca3af;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .track-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-item-title {
+            font-size: 13px;
+            color: #ffffffde;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-item-duration {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .explorer-toggle {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+
+        .explorer-toggle:hover {
+            color: #ffffffde;
+        }
+
+        @media (max-width: 768px) {
+            .player-bar {
+                grid-template-columns: 1fr auto;
+                height: 70px;
+                padding: 0 12px;
+                gap: 12px;
+            }
+
+            .progress-section {
+                display: none;
+            }
+
+            .track-title {
+                font-size: 13px;
+            }
+
+            .explorer-panel {
+                width: 100%;
+                right: 0;
+                border-radius: 0;
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Versteckter SoundCloud iframe -->
+    <iframe id="sc-widget" class="hidden-iframe" 
+        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2158762997&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true">
+    </iframe>
+
+    <div class="shell-container">
+        <iframe id="content-frame" src="/landing.html" title="Klein und Haarig"></iframe>
+        
+        <!-- Player Bar -->
+        <div class="player-bar">
+            <div class="track-info">
+                <div class="track-artwork placeholder" id="artwork">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <div class="track-text">
+                    <div class="track-title" id="title">Loading...</div>
+                    <div class="track-artist" id="artist"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <select id="year-select" class="year-select">
+                    <option value="2025|soundcloud:playlists:2158762997">2025</option>
+                    <option value="2024|soundcloud:playlists:1839382410">2024</option>
+                </select>
+                <button class="control-btn" id="prev-btn" aria-label="Previous">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                    </svg>
+                </button>
+                <button class="control-btn play" id="play-btn" aria-label="Play">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" id="play-icon">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+                <button class="control-btn" id="next-btn" aria-label="Next">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                    </svg>
+                </button>
+                <button class="explorer-toggle" id="explorer-toggle" aria-label="Playlist">☰</button>
+            </div>
+
+            <div class="progress-section">
+                <span class="time" id="current-time">0:00</span>
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span class="time" id="duration">0:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Track Explorer -->
+    <div class="explorer-panel" id="explorer-panel">
+        <div class="explorer-header">
+            <h3 id="playlist-title">Playlist</h3>
+            <button class="explorer-close" id="explorer-close">&times;</button>
+        </div>
+        <div class="explorer-list" id="explorer-list"></div>
+    </div>
+
+    <script>
+        // SoundCloud Widget
+        const scIframe = document.getElementById('sc-widget')
+        let widget = SC.Widget(scIframe)
+
+        const titleEl = document.getElementById('title')
+        const artistEl = document.getElementById('artist')
+        const artworkEl = document.getElementById('artwork')
+        const playBtn = document.getElementById('play-btn')
+        const playIcon = document.getElementById('play-icon')
+        const prevBtn = document.getElementById('prev-btn')
+        const nextBtn = document.getElementById('next-btn')
+        const progressBar = document.getElementById('progress-bar')
+        const progressFill = document.getElementById('progress-fill')
+        const currentTimeEl = document.getElementById('current-time')
+        const durationEl = document.getElementById('duration')
+        const explorerToggle = document.getElementById('explorer-toggle')
+        const explorerPanel = document.getElementById('explorer-panel')
+        const explorerList = document.getElementById('explorer-list')
+        const playlistTitle = document.getElementById('playlist-title')
+        const explorerClose = document.getElementById('explorer-close')
+
+        let isPlaying = false
+        let currentDuration = 0
+        let allTracks = []
+        let currentTrackIndex = 0
+        let knownTrackIds = new Set()
+
+        const formatTime = (ms) => {
+            if (!ms || isNaN(ms) || ms <= 0) return '0:00'
+            const totalSeconds = Math.floor(ms / 1000)
+            const hours = Math.floor(totalSeconds / 3600)
+            const minutes = Math.floor((totalSeconds % 3600) / 60)
+            const seconds = totalSeconds % 60
+            
+            if (hours > 0) {
+                return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+            }
+            return `${minutes}:${String(seconds).padStart(2, '0')}`
+        }
+
+        const updateTrackInfo = (sound, index) => {
+            if (!sound) return
+
+            // Priorisiere unsere Config-Daten (haben Cover-URLs!)
+            const trackData = allTracks[index]
+            
+            // Titel: Config > Widget > Fallback
+            titleEl.textContent = trackData?.title || sound.title || `Track ${index + 1}`
+            
+            // Artist: Config > Widget > Fallback
+            artistEl.textContent = trackData?.artist || trackData?.user?.username || sound.user?.username || ''
+
+            // Artwork: Config > Widget > Placeholder
+            const artworkUrl = trackData?.artwork_url || sound.artwork_url
+
+            if (artworkUrl) {
+                const imgSrc = artworkUrl.includes('sndcdn.com')
+                    ? artworkUrl.replace('-large', '-t500x500')
+                    : artworkUrl
+                artworkEl.innerHTML = `<img src="${imgSrc}" class="track-artwork" alt="Artwork">`
+                artworkEl.className = 'track-artwork'
+            } else {
+                artworkEl.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`
+                artworkEl.className = 'track-artwork placeholder'
+            }
+        }
+
+        const renderExplorer = () => {
+            if (allTracks.length === 0) {
+                explorerList.innerHTML = '<p style="padding: 16px; color: #9ca3af;">Loading...</p>'
+                return
+            }
+
+            playlistTitle.textContent = `Playlist (${allTracks.length} Tracks)`
+            
+            explorerList.innerHTML = allTracks.map((track, i) => `
+                <div class="track-item ${i === currentTrackIndex ? 'active' : ''}" data-index="${i}">
+                    <span class="track-item-num">${i + 1}</span>
+                    <div class="track-item-info">
+                        <div class="track-item-title">${track.title || `Track ${i + 1}`}</div>
+                        <div class="track-item-duration">${formatTime(track.duration)}</div>
+                    </div>
+                </div>
+            `).join('')
+
+            explorerList.querySelectorAll('.track-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const index = parseInt(el.dataset.index)
+                    navigateToTrack(index)
+                })
+            })
+        }
+
+        const updatePlayIcon = (playing) => {
+            isPlaying = playing
+            playIcon.innerHTML = playing 
+                ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+                : '<path d="M8 5v14l11-7z"/>'
+            
+            explorerList.querySelectorAll('.track-item').forEach((el, i) => {
+                el.classList.toggle('active', i === currentTrackIndex && playing)
+            })
+        }
+
+        const navigateToTrack = (index) => {
+            if (index < 0 || index >= allTracks.length) return
+            
+            const track = allTracks[index]
+            if (!track || !track.permalink_url) return
+            
+            currentTrackIndex = index
+            
+            // UI sofort aktualisieren
+            updateTrackInfo(track, index)
+            renderExplorer()
+            
+            // Track laden
+            widget.load(track.permalink_url)
+            
+            // Kurz warten bis der Track geladen ist, dann abspielen
+            setTimeout(() => {
+                widget.play()
+            }, 500)
+        }
+
+        // Widget Events Setup
+        const setupWidgetEvents = () => {
+            widget.bind(SC.Widget.Events.READY, () => {
+                fetchPlaylistData()
+                currentTrackIndex = 0
+
+                widget.getCurrentSound((sound) => {
+                    if (sound) {
+                        updateTrackInfo(sound, 0)
+                        widget.getDuration((dur) => {
+                            currentDuration = dur
+                            durationEl.textContent = formatTime(dur)
+                        })
+                    }
+                })
+                
+                widget.isPaused((paused) => {
+                    isPlaying = !paused
+                    updatePlayIcon(isPlaying)
+                })
+            })
+
+            widget.bind(SC.Widget.Events.PLAY, () => {
+                isPlaying = true
+                updatePlayIcon(true)
+                renderExplorer()
+            })
+
+            widget.bind(SC.Widget.Events.PAUSE, () => {
+                isPlaying = false
+                updatePlayIcon(false)
+                renderExplorer()
+            })
+
+            widget.bind(SC.Widget.Events.SOUND_CHANGE, () => {
+                // Neue Tracks sammeln
+                widget.getSounds((sounds) => {
+                    if (sounds && sounds.length > 0) {
+                        sounds.forEach(s => {
+                            if (!knownTrackIds.has(s.id)) {
+                                knownTrackIds.add(s.id)
+                                allTracks.push(s)
+                            }
+                        })
+                        renderExplorer()
+                    }
+                })
+
+                widget.getCurrentSound((sound) => {
+                    if (sound) {
+                        // ID matchen
+                        let foundIndex = allTracks.findIndex(s => s.id === sound.id)
+                        if (foundIndex >= 0) {
+                            currentTrackIndex = foundIndex
+                        }
+                        
+                        updateTrackInfo(sound, currentTrackIndex)
+                        renderExplorer()
+
+                        widget.getDuration((dur) => {
+                            currentDuration = dur
+                            durationEl.textContent = formatTime(dur)
+                        })
+                    }
+                })
+            })
+        }
+
+        // Initial events
+        setupWidgetEvents()
+
+        // Player State Polling - regelmäßige Updates
+        setInterval(() => {
+            // Play State prüfen
+            widget.isPaused((paused) => {
+                if (paused !== !isPlaying) {
+                    isPlaying = !paused
+                    updatePlayIcon(isPlaying)
+                }
+            })
+
+            // Current Sound prüfen
+            widget.getCurrentSound((sound) => {
+                if (sound) {
+                    let foundIndex = allTracks.findIndex(s => s.id === sound.id)
+                    if (foundIndex >= 0 && foundIndex !== currentTrackIndex) {
+                        currentTrackIndex = foundIndex
+                        updateTrackInfo(sound, currentTrackIndex)
+                        renderExplorer()
+                    }
+                    
+                    // Duration
+                    widget.getDuration((dur) => {
+                        if (dur && dur !== currentDuration) {
+                            currentDuration = dur
+                            durationEl.textContent = formatTime(dur)
+                        }
+                    })
+                }
+            })
+        }, 1000)
+
+        // Progress
+        setInterval(() => {
+            widget.getPosition((pos) => {
+                progressFill.style.width = currentDuration ? `${(pos / currentDuration) * 100}%` : '0%'
+                currentTimeEl.textContent = formatTime(pos)
+            })
+        }, 500)
+
+        // Playlist-Daten laden
+        const fetchPlaylistData = () => {
+            const currentYear = yearSelect.value.split('|')[0]
+            const config = playlists[currentYear]
+            
+            // Wenn manuelle Tracks konfiguriert sind, verwende diese
+            if (config && config.tracks && config.tracks.length > 0) {
+                allTracks = config.tracks.map(t => ({
+                    id: t.id,
+                    title: t.title,
+                    user: { username: t.artist || '' },
+                    duration: t.duration || 0,
+                    artwork_url: t.artwork_url || null,
+                    permalink_url: t.permalink_url || ''
+                }))
+                knownTrackIds = new Set(allTracks.map(t => t.id))
+                renderExplorer()
+                return
+            }
+            
+            // Fallback: Widget API
+            loadFromWidget()
+        }
+        
+        const loadFromWidget = () => {
+            widget.getSounds((sounds) => {
+                if (sounds && sounds.length > 0) {
+                    sounds.forEach(s => {
+                        if (!knownTrackIds.has(s.id)) {
+                            knownTrackIds.add(s.id)
+                            allTracks.push(s)
+                        }
+                    })
+                    renderExplorer()
+                }
+            })
+        }
+
+        // Playlist-Config mit Track-Daten
+        const playlists = {
+            '2025': {
+                label: 'KUH25',
+                playlistId: 'soundcloud:playlists:2158762997',
+                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
+                tracks: [
+                    {
+                        id: 2115495039,
+                        title: 'glossy',
+                        artist: 'KuH Festival',
+                        duration: 10862000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-KHz9AIfQ7JWSeE4T-KUhCyw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-glossy'
+                    },
+                    {
+                        id: 2110295277,
+                        title: 'Mark Lando',
+                        artist: 'KuH Festival',
+                        duration: 10846000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-7NDGyMfFzqKVZT3a-KKwCOA-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-mark-lando'
+                    },
+                    {
+                        id: 2238896972,
+                        title: 'Sarmabot',
+                        artist: 'KuH Festival',
+                        duration: 8808000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-HQwRvvByia6bw62z-30xQRg-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-sarmabot'
+                    },
+                    {
+                        id: 2242529078,
+                        title: 'Aimz',
+                        artist: 'KuH Festival',
+                        duration: 3924000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-u8FAtfq8hwShfUBG-spyHFg-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-aimz'
+                    },
+                    {
+                        id: 2244442814,
+                        title: 'DJ Ebhardy',
+                        artist: 'KuH Festival',
+                        duration: 11741000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-KdwzJIAPbm6Pweg7-rIdSpg-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-dj-ebhardy'
+                    },
+                    {
+                        id: 2247265673,
+                        title: 'Amelia Holt',
+                        artist: 'KuH Festival',
+                        duration: 10221000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-YSZkHnpEsdOGYBFM-6yUMOA-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-amelia-holt'
+                    },
+                    {
+                        id: 2251310063,
+                        title: 'montage & TX4',
+                        artist: 'KuH Festival',
+                        duration: 14658000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-Zz5CbGLDqpkrMiXH-yzHVUg-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-montage-tx4'
+                    },
+                    {
+                        id: 2253715697,
+                        title: 'MAENDI',
+                        artist: 'KuH Festival',
+                        duration: 10672000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-w0lFPmyFNATQVMdS-xf7pAg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-maendi'
+                    },
+                    {
+                        id: 2256991469,
+                        title: 'Isolated Material',
+                        artist: 'KuH Festival',
+                        duration: 10567000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-yEG2Z33FjOWVLRbX-mx9S3Q-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-isolated-material'
+                    },
+                    {
+                        id: 2259875003,
+                        title: 'Andrea Ida & Philipp Otterbach',
+                        artist: 'KuH Festival',
+                        duration: 14726000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-Gd6cXFbft0nbZM5X-J95VTA-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-andrea-ida-philipp-otterbach'
+                    },
+                    {
+                        id: 2263563560,
+                        title: 'jess_whereyouat',
+                        artist: 'KuH Festival',
+                        duration: 10454000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-GXs2iiLXvSRJI040-5FU8iw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-jess-whereyouat'
+                    },
+                    {
+                        id: 2265809342,
+                        title: 'Pomander (Live)',
+                        artist: 'KuH Festival',
+                        duration: 4318000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-2g18bGPq4HrZMlzo-z8dKyg-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-pomander'
+                    },
+                    {
+                        id: 2110536102,
+                        title: 'ELISETHERE & BalTribe',
+                        artist: 'KuH Festival',
+                        duration: 11061000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-0lnMNb0Cmj0yAmND-gJuyzw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-elise-et-leon'
+                    },
+                    {
+                        id: 2110315173,
+                        title: 'Yugo',
+                        artist: 'KuH Festival',
+                        duration: 10016000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-s2nzJnlV5aEZfhQ2-e7CbpA-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-yugo'
+                    },
+                    {
+                        id: 2110307094,
+                        title: 'Pasci',
+                        artist: 'KuH Festival',
+                        duration: 8470000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-kaq6YGUhoFOo1lKj-1DIwBQ-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-pasci'
+                    },
+                    {
+                        id: 2120577951,
+                        title: 'East Moon',
+                        artist: 'KuH Festival',
+                        duration: 11490000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-uIHCFgyJHycIH8wj-9kOu6w-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-eastmoon'
+                    },
+                    {
+                        id: 2119181166,
+                        title: 'grossvater',
+                        artist: 'KuH Festival',
+                        duration: 10511000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-UWHSsqV9JpI2e6Ed-BOIm5w-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-grossvater'
+                    },
+                    {
+                        id: 2110269834,
+                        title: 'aphasit',
+                        artist: 'KuH Festival',
+                        duration: 12624000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-Sco5fe4GPSRay9YB-RF8Nmw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-aphasit'
+                    },
+                    {
+                        id: 2110322154,
+                        title: 'Gio Elia',
+                        artist: 'KuH Festival',
+                        duration: 11635000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-4tFzVpG2ukmUvsma-Kb0hmg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/gio-elia-kuh25'
+                    },
+                    {
+                        id: 2115576792,
+                        title: 'Firat & Burak',
+                        artist: 'KuH Festival',
+                        duration: 12448000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-lCowgZAPdW2ho8yl-9AbV0w-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-firat-burak'
+                    },
+                    {
+                        id: 2110288770,
+                        title: 'Riin',
+                        artist: 'KuH Festival',
+                        duration: 11635000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-PYWBE8zLPIcu2B9s-l6PhWg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-riin'
+                    },
+                    {
+                        id: 2119371507,
+                        title: 'Kanapee Nordwand',
+                        artist: 'KuH Festival',
+                        duration: 9065000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-ZHkRBfmX4Q84HuB3-eAyosQ-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-kanapee-nordwand'
+                    },
+                    {
+                        id: 2118623733,
+                        title: 'schnucki47',
+                        artist: 'KuH Festival',
+                        duration: 10500000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-loyzQPsTMF7FztPT-LSaakw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2025-schnucki47'
+                    }
+                ]
+            },
+            '2024': {
+                label: 'KUH24',
+                playlistId: 'soundcloud:playlists:1839382410',
+                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024',
+                tracks: [
+                    {
+                        id: 1850441985,
+                        title: 'Ada Luvv + Low Ki',
+                        artist: 'KuH Festival',
+                        duration: 10588000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-2v7ytXIlK3cmhMkY-yI6u1Q-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ada-luvv-low-ki'
+                    },
+                    {
+                        id: 1960863663,
+                        title: 'Andrea Ida',
+                        artist: 'KuH Festival',
+                        duration: 4392000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-3FwKNGEo3yqV22MH-X2Pnsg-t1080x1080.png',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-andreaida'
+                    },
+                    {
+                        id: 1849889655,
+                        title: 'DJ Ebhardy (Live)',
+                        artist: 'KuH Festival',
+                        duration: 3527000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-BgUCOrCpVGMgeRAz-uJgNxQ-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-dj-ebhardy-live'
+                    },
+                    {
+                        id: 1849877574,
+                        title: 'FEELX',
+                        artist: 'KuH Festival',
+                        duration: 6570000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-NyrCD5inZtIrlo5I-hKszcg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-feelx'
+                    },
+                    {
+                        id: 1849882230,
+                        title: 'C. Comberti',
+                        artist: 'KuH Festival',
+                        duration: 7342000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-zxIycyadAw2xAs9Q-HmmQlg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-c-comberti'
+                    },
+                    {
+                        id: 1849896948,
+                        title: 'Olgica',
+                        artist: 'KuH Festival',
+                        duration: 7196000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-jj7fFSqiHCKwbAiC-44UGcg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-olgica'
+
+                    },
+                    {
+                        id: 1853123916,
+                        title: 'Herr Dobler',
+                        artist: 'KuH Festival',
+                        duration: 8163000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-E6f820v5X8slTyrO-Co38ig-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-herr-dobler'
+                    },
+                    {
+                        id: 1850918733,
+                        title: 'Sarmabot',
+                        artist: 'KuH Festival',
+                        duration: 8810000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-IRCuhrZvyuTsaMN1-mWy8uw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-sarmabot'
+                    },
+                    {
+                        id: 1850458515,
+                        title: 'Paul Linke',
+                        artist: 'KuH Festival',
+                        duration: 8810000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-zwnOteozfyxyMooB-YSpi9g-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-paul-linke'
+                    },
+                    {
+                        id: 1853109525,
+                        title: 'DJ Blech + DJ Gerhardt + Riin',
+                        artist: 'KuH Festival',
+                        duration: 9428000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-hc9gAxzuBtYMnh1V-CvUZAA-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-blech-gerhardt-riin'
+                    },
+                    {
+                        id: 1853127528,
+                        title: 'Kanapee Nordwand',
+                        artist: 'KuH Festival',
+                        duration: 5331000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-iBtlBgFFOhepJ768-PeNC2g-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-kp'
+                    },
+                    {
+                        id: 1850447952,
+                        title: 'Kessel Vale',
+                        artist: 'KuH Festival',
+                        duration: 7359000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-XRzdRRD7ZQDxhrkT-5PZUQA-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-kessel-vale'
+                    },
+                    {
+                        id: 1853198244,
+                        title: 'Filip',
+                        artist: 'KuH Festival',
+                        duration: 5883000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-6BTi8E6yYhHhHyTJ-aWu6tw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-filip'
+                    },
+                    {
+                        id: 1853088222,
+                        title: 'Lohrkraut + Zeitrapha',
+                        artist: 'KuH Festival',
+                        duration: 14364000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-ShfaAUW3BACQxUh1-RUiKIg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-lohrkraut-zeitrapha'
+                    },
+                    {
+                        id: 1853207016,
+                        title: 'N:in',
+                        artist: 'KuH Festival',
+                        duration: 6896000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-Dy3tkxqIP2WLkuOr-mz2ASg-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-nin'
+                    },
+                    {
+                        id: 1853098089,
+                        title: 'Dypere',
+                        artist: 'KuH Festival',
+                        duration: 7614000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-JjPtmDcj0iSezvxK-pgzm6Q-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-dypere'
+                    },
+                    {
+                        id: 1853102538,
+                        title: 'Esgeem',
+                        artist: 'KuH Festival',
+                        duration: 7552000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-x478RgiIGtBSyIVp-tY5bCQ-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-esgeem'
+                    },
+                    {
+                        id: 1850848134,
+                        title: 'Ellice + SAT 70',
+                        artist: 'KuH Festival',
+                        duration: 7314000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-NhyIBgYKGuocOVTa-uELozA-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ellice-sat70'
+                    },
+                    {
+                        id: 1853730015,
+                        title: 'Candy Pollard',
+                        artist: 'KuH Festival',
+                        duration: 7181000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-XRFkINyHu2cmM62C-8UrUJw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-candy-pollard'
+                    },
+                    {
+                        id: 1850443131,
+                        title: 'Jan Loup',
+                        artist: 'KuH Festival',
+                        duration: 8750000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-mfrwWM1bWoEJzMsU-oF48Aw-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-jan-loup'
+                    },
+                    {
+                        id: 1850933517,
+                        title: 'tbhase',
+                        artist: 'KuH Festival',
+                        duration: 8750000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: 'https://i1.sndcdn.com/artworks-4WeqmSyVhm3Dx4Gm-6i1QyQ-t1080x1080.jpg',
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-tbhase'
+                    }
+                    // Mehr Tracks hier einfügen:
+                    // {
+                    //     id: SOUNDCLOUD_TRACK_ID,
+                    //     title: 'Titel',
+                    //     artist: 'Artist',
+                    //     duration: 0,  // in Millisekunden, z.B. 3600000 = 60 Min
+                    //     artwork_url: null,
+                    //     permalink_url: 'https://soundcloud.com/...'
+                    // }
+                ]
+            }
+        }
+
+        // Track-Daten automatisch vom Widget laden und speichern
+        // Nach dem ersten Laden werden die Tracks im explorer angezeigt
+        // und beim Navigieren durch die Playlist ergänzt
+
+        // SoundCloud iframe URL builder
+        const buildPlaylistUrl = (playlistId) => {
+            return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/${encodeURIComponent(playlistId)}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true`
+        }
+
+        // Year selector
+        const yearSelect = document.getElementById('year-select')
+        let currentPlaylistId = 'soundcloud:playlists:2158762997'
+
+        const switchPlaylist = (playlistId) => {
+            if (playlistId === currentPlaylistId) return
+
+            currentPlaylistId = playlistId
+
+            // Reset state
+            allTracks = []
+            knownTrackIds = new Set()
+            currentTrackIndex = 0
+            titleEl.textContent = 'Loading...'
+            artistEl.textContent = ''
+
+            // Update iframe (triggers reload)
+            scIframe.src = buildPlaylistUrl(playlistId)
+
+            // Recreate widget reference after iframe reload
+            setTimeout(() => {
+                widget = SC.Widget(scIframe)
+                setupWidgetEvents()
+            }, 300)
+        }
+
+        yearSelect.addEventListener('change', (e) => {
+            const [year, playlistId] = e.target.value.split('|')
+            switchPlaylist(playlistId)
+        })
+
+        // Controls
+        playBtn.addEventListener('click', () => widget.toggle())
+        prevBtn.addEventListener('click', () => widget.prev())
+        nextBtn.addEventListener('click', () => widget.next())
+
+        // Explorer
+        explorerToggle.addEventListener('click', () => explorerPanel.classList.toggle('open'))
+        explorerClose.addEventListener('click', () => explorerPanel.classList.remove('open'))
+
+        // Progress Bar
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect()
+            const percent = (e.clientX - rect.left) / rect.width
+            widget.seekTo(Math.floor(currentDuration * percent))
+        })
+
+        // Content Frame Navigation
+        const contentFrame = document.getElementById('content-frame')
+
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'NAVIGATE') {
+                const url = event.data.url
+                if (url && url !== window.location.pathname) {
+                    history.pushState({ path: url }, '', url)
+                }
+            }
+        })
+
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.path) {
+                contentFrame.contentWindow.postMessage({
+                    type: 'NAVIGATE_TO',
+                    url: event.state.path
+                }, '*')
+            }
+        })
+    </script>
+</body>
 </html>
