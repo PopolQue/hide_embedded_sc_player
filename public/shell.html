@@ -421,10 +421,6 @@
         let allTracks = []
         let currentTrackIndex = 0
         let knownTrackIds = new Set()
-        
-        // Navigation state
-        let navigationTarget = -1
-        let navigationStepsLeft = 0
 
         const formatTime = (ms) => {
             if (!ms || isNaN(ms) || ms <= 0) return '0:00'
@@ -499,20 +495,19 @@
         }
 
         const navigateToTrack = (index) => {
-            if (index === currentTrackIndex) {
-                widget.play()
-                return
-            }
-
-            navigationTarget = index
-            // -1 weil der erste next/prev schon ausgeführt wird
-            navigationStepsLeft = Math.abs(index - currentTrackIndex) - 1
+            if (index < 0 || index >= allTracks.length) return
             
-            if (index > currentTrackIndex) {
-                widget.next()
-            } else {
-                widget.prev()
-            }
+            const track = allTracks[index]
+            if (!track || !track.permalink_url) return
+            
+            currentTrackIndex = index
+            
+            // Direkt den Track laden
+            widget.load(track.permalink_url)
+            
+            // UI aktualisieren
+            updateTrackInfo(track, index)
+            renderExplorer()
         }
 
         // Widget Events Setup
@@ -565,30 +560,12 @@
 
                 widget.getCurrentSound((sound) => {
                     if (sound) {
-                        // Versuche die ID zu matchen
+                        // ID matchen
                         let foundIndex = allTracks.findIndex(s => s.id === sound.id)
-                        
                         if (foundIndex >= 0) {
                             currentTrackIndex = foundIndex
-                        } else if (navigationTarget >= 0) {
-                            // Bei Navigation: Index aus Target berechnen
-                            if (sound.id !== (allTracks[currentTrackIndex]?.id)) {
-                                // Track hat gewechselt
-                                if (navigationTarget > currentTrackIndex) {
-                                    currentTrackIndex++
-                                } else {
-                                    currentTrackIndex--
-                                }
-                            }
-                        } else {
-                            // Fallback: zähle Steps
-                            currentTrackIndex++
-                            if (currentTrackIndex >= allTracks.length) {
-                                currentTrackIndex = 0
-                            }
                         }
                         
-                        // Immer mit unseren Config-Daten aktualisieren
                         updateTrackInfo(sound, currentTrackIndex)
                         renderExplorer()
 
@@ -596,20 +573,6 @@
                             currentDuration = dur
                             durationEl.textContent = formatTime(dur)
                         })
-
-                        // Navigation: Steps abzählen
-                        if (navigationTarget >= 0) {
-                            if (navigationStepsLeft <= 0) {
-                                navigationTarget = -1
-                                navigationStepsLeft = 0
-                                widget.play()
-                            } else {
-                                navigationStepsLeft--
-                                setTimeout(() => {
-                                    widget.next()
-                                }, 300)
-                            }
-                        }
                     }
                 })
             })
@@ -627,26 +590,24 @@
                     updatePlayIcon(isPlaying)
                 }
             })
-            
-            // Current Sound prüfen - Track-Index aktualisieren
+
+            // Current Sound prüfen
             widget.getCurrentSound((sound) => {
                 if (sound) {
-                    // ID matchen
                     let foundIndex = allTracks.findIndex(s => s.id === sound.id)
-                    
                     if (foundIndex >= 0 && foundIndex !== currentTrackIndex) {
                         currentTrackIndex = foundIndex
-                    } else if (navigationTarget >= 0) {
-                        // Navigation läuft
-                        if (sound.id !== allTracks[currentTrackIndex]?.id) {
-                            // Track hat gewechselt
-                            currentTrackIndex += (navigationTarget > currentTrackIndex) ? 1 : -1
-                            currentTrackIndex = Math.max(0, Math.min(currentTrackIndex, allTracks.length - 1))
-                        }
+                        updateTrackInfo(sound, currentTrackIndex)
+                        renderExplorer()
                     }
                     
-                    // UI aktualisieren
-                    updateTrackInfo(sound, currentTrackIndex)
+                    // Duration
+                    widget.getDuration((dur) => {
+                        if (dur && dur !== currentDuration) {
+                            currentDuration = dur
+                            durationEl.textContent = formatTime(dur)
+                        }
+                    })
                 }
             })
         }, 1000)
@@ -907,21 +868,19 @@
 
         const switchPlaylist = (playlistId) => {
             if (playlistId === currentPlaylistId) return
-            
+
             currentPlaylistId = playlistId
-            
+
             // Reset state
             allTracks = []
             knownTrackIds = new Set()
             currentTrackIndex = 0
-            navigationTarget = -1
-            navigationStepsLeft = 0
             titleEl.textContent = 'Loading...'
             artistEl.textContent = ''
-            
+
             // Update iframe (triggers reload)
             scIframe.src = buildPlaylistUrl(playlistId)
-            
+
             // Recreate widget reference after iframe reload
             setTimeout(() => {
                 widget = SC.Widget(scIframe)
