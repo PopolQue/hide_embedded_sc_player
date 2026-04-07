@@ -436,11 +436,25 @@
 
         const updateTrackInfo = (sound, index) => {
             if (!sound) return
-            titleEl.textContent = sound.title || `Track ${index + 1}`
-            artistEl.textContent = sound.user?.username || ''
+
+            // Priorisiere unsere Config-Daten (haben Cover-URLs!)
+            const trackData = allTracks[index]
             
-            if (sound.artwork_url) {
-                artworkEl.innerHTML = `<img src="${sound.artwork_url.replace('-large', '-t500x500')}" class="track-artwork" alt="Artwork">`
+            // Titel: Config > Widget > Fallback
+            titleEl.textContent = trackData?.title || sound.title || `Track ${index + 1}`
+            
+            // Artist: Config > Widget > Fallback
+            artistEl.textContent = trackData?.artist || trackData?.user?.username || sound.user?.username || ''
+
+            // Artwork: Config > Widget > Placeholder
+            const artworkUrl = trackData?.artwork_url || sound.artwork_url
+
+            if (artworkUrl) {
+                const imgSrc = artworkUrl.includes('sndcdn.com')
+                    ? artworkUrl.replace('-large', '-t500x500')
+                    : artworkUrl
+                artworkEl.innerHTML = `<img src="${imgSrc}" class="track-artwork" alt="Artwork">`
+                artworkEl.className = 'track-artwork'
             } else {
                 artworkEl.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`
                 artworkEl.className = 'track-artwork placeholder'
@@ -505,7 +519,8 @@
         const setupWidgetEvents = () => {
             widget.bind(SC.Widget.Events.READY, () => {
                 fetchPlaylistData()
-                
+                currentTrackIndex = 0
+
                 widget.getCurrentSound((sound) => {
                     if (sound) {
                         updateTrackInfo(sound, 0)
@@ -515,19 +530,27 @@
                         })
                     }
                 })
+                
+                widget.isPaused((paused) => {
+                    isPlaying = !paused
+                    updatePlayIcon(isPlaying)
+                })
             })
 
             widget.bind(SC.Widget.Events.PLAY, () => {
                 isPlaying = true
                 updatePlayIcon(true)
+                renderExplorer()
             })
 
             widget.bind(SC.Widget.Events.PAUSE, () => {
                 isPlaying = false
                 updatePlayIcon(false)
+                renderExplorer()
             })
 
             widget.bind(SC.Widget.Events.SOUND_CHANGE, () => {
+                // Neue Tracks sammeln
                 widget.getSounds((sounds) => {
                     if (sounds && sounds.length > 0) {
                         sounds.forEach(s => {
@@ -539,21 +562,41 @@
                         renderExplorer()
                     }
                 })
-                
+
                 widget.getCurrentSound((sound) => {
                     if (sound) {
-                        const index = allTracks.findIndex(s => s.id === sound.id)
-                        if (index >= 0) {
-                            currentTrackIndex = index
+                        // Versuche die ID zu matchen
+                        let foundIndex = allTracks.findIndex(s => s.id === sound.id)
+                        
+                        if (foundIndex >= 0) {
+                            currentTrackIndex = foundIndex
+                        } else if (navigationTarget >= 0) {
+                            // Bei Navigation: Index aus Target berechnen
+                            if (sound.id !== (allTracks[currentTrackIndex]?.id)) {
+                                // Track hat gewechselt
+                                if (navigationTarget > currentTrackIndex) {
+                                    currentTrackIndex++
+                                } else {
+                                    currentTrackIndex--
+                                }
+                            }
+                        } else {
+                            // Fallback: zähle Steps
+                            currentTrackIndex++
+                            if (currentTrackIndex >= allTracks.length) {
+                                currentTrackIndex = 0
+                            }
                         }
+                        
+                        // Immer mit unseren Config-Daten aktualisieren
                         updateTrackInfo(sound, currentTrackIndex)
                         renderExplorer()
-                        
+
                         widget.getDuration((dur) => {
                             currentDuration = dur
                             durationEl.textContent = formatTime(dur)
                         })
-                        
+
                         // Navigation: Steps abzählen
                         if (navigationTarget >= 0) {
                             if (navigationStepsLeft <= 0) {
@@ -574,6 +617,39 @@
 
         // Initial events
         setupWidgetEvents()
+
+        // Player State Polling - regelmäßige Updates
+        setInterval(() => {
+            // Play State prüfen
+            widget.isPaused((paused) => {
+                if (paused !== !isPlaying) {
+                    isPlaying = !paused
+                    updatePlayIcon(isPlaying)
+                }
+            })
+            
+            // Current Sound prüfen - Track-Index aktualisieren
+            widget.getCurrentSound((sound) => {
+                if (sound) {
+                    // ID matchen
+                    let foundIndex = allTracks.findIndex(s => s.id === sound.id)
+                    
+                    if (foundIndex >= 0 && foundIndex !== currentTrackIndex) {
+                        currentTrackIndex = foundIndex
+                    } else if (navigationTarget >= 0) {
+                        // Navigation läuft
+                        if (sound.id !== allTracks[currentTrackIndex]?.id) {
+                            // Track hat gewechselt
+                            currentTrackIndex += (navigationTarget > currentTrackIndex) ? 1 : -1
+                            currentTrackIndex = Math.max(0, Math.min(currentTrackIndex, allTracks.length - 1))
+                        }
+                    }
+                    
+                    // UI aktualisieren
+                    updateTrackInfo(sound, currentTrackIndex)
+                }
+            })
+        }, 1000)
 
         // Progress
         setInterval(() => {
