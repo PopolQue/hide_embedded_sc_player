@@ -354,8 +354,8 @@
 
             <div class="controls">
                 <select id="year-select" class="year-select">
-                    <option value="2025|soundcloud:playlists:2158762997">KUH25</option>
-                    <option value="2024|soundcloud:playlists:1839382410">KUH24</option>
+                    <option value="2025|soundcloud:playlists:2158762997">2025</option>
+                    <option value="2024|soundcloud:playlists:1839382410">2024</option>
                 </select>
                 <button class="control-btn" id="prev-btn" aria-label="Previous">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -583,30 +583,97 @@
             })
         }, 500)
 
-        // Playlist-Daten laden - beim Navigieren Tracks sammeln
-        const fetchPlaylistData = () => {
-            widget.getSounds((sounds) => {
-                if (sounds && sounds.length > 0) {
-                    sounds.forEach(s => {
-                        if (!knownTrackIds.has(s.id)) {
-                            knownTrackIds.add(s.id)
-                            allTracks.push(s)
-                        }
-                    })
-                    renderExplorer()
+        // Playlist-Daten laden - über oEmbed + resolve alle Tracks holen
+        const fetchPlaylistData = async () => {
+            const currentYear = yearSelect.value.split('|')[0]
+            const config = playlists[currentYear]
+            if (!config || !config.url) {
+                // Fallback: Widget API
+                widget.getSounds((sounds) => {
+                    if (sounds && sounds.length > 0) {
+                        sounds.forEach(s => {
+                            if (!knownTrackIds.has(s.id)) {
+                                knownTrackIds.add(s.id)
+                                allTracks.push(s)
+                            }
+                        })
+                        renderExplorer()
+                    }
+                })
+                return
+            }
+
+            try {
+                // Schritt 1: oEmbed um die kanonische URL zu bekommen
+                const oembedResp = await fetch(
+                    `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(config.url)}`
+                )
+                const oembedData = await oembedResp.json()
+                
+                // Schritt 2: Resolve Endpoint für alle Tracks
+                const resolveResp = await fetch(
+                    `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(config.url)}&client_id=iZc9dWuGcIsaYQzClV1U58VYi6w9X1b6&app_version=1712331398&app_locale=en`
+                )
+                
+                if (resolveResp.ok) {
+                    const data = await resolveResp.json()
+                    if (data && data.tracks && data.tracks.length > 0) {
+                        allTracks = []
+                        knownTrackIds = new Set()
+                        
+                        data.tracks.forEach((track, i) => {
+                            const soundData = {
+                                id: track.id,
+                                title: track.title || `Track ${i + 1}`,
+                                user: {
+                                    username: track.user?.username || track.publisher_metadata?.artist || ''
+                                },
+                                duration: track.duration || track.full_duration || 0,
+                                artwork_url: track.artwork_url || null,
+                                permalink_url: track.permalink_url || ''
+                            }
+                            allTracks.push(soundData)
+                            knownTrackIds.add(track.id)
+                        })
+                        
+                        renderExplorer()
+                        
+                        // Current Track Info updaten
+                        widget.getCurrentSound((sound) => {
+                            if (sound) {
+                                updateTrackInfo(sound, 0)
+                            }
+                        })
+                    }
                 }
-            })
+            } catch (err) {
+                console.warn('Could not fetch full playlist via API, falling back to widget:', err)
+                // Fallback: Widget API
+                widget.getSounds((sounds) => {
+                    if (sounds && sounds.length > 0) {
+                        sounds.forEach(s => {
+                            if (!knownTrackIds.has(s.id)) {
+                                knownTrackIds.add(s.id)
+                                allTracks.push(s)
+                            }
+                        })
+                        renderExplorer()
+                    }
+                })
+            }
         }
 
         // Playlist-Config
         const playlists = {
             '2025': {
                 label: 'KUH25',
-                playlistId: 'soundcloud:playlists:2158762997'
+                playlistId: 'soundcloud:playlists:2158762997',
+                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025'
             },
             '2024': {
                 label: 'KUH24',
-                playlistId: 'soundcloud:playlists:1839382410'
+                playlistId: 'soundcloud:playlists:1839382410',
+                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024'
             }
         }
 
