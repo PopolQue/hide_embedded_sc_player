@@ -583,99 +583,242 @@
             })
         }, 500)
 
-        // Playlist-Daten laden - über oEmbed + resolve alle Tracks holen
-        const fetchPlaylistData = async () => {
+        // Playlist-Daten laden
+        const fetchPlaylistData = () => {
             const currentYear = yearSelect.value.split('|')[0]
             const config = playlists[currentYear]
-            if (!config || !config.url) {
-                // Fallback: Widget API
-                widget.getSounds((sounds) => {
-                    if (sounds && sounds.length > 0) {
-                        sounds.forEach(s => {
-                            if (!knownTrackIds.has(s.id)) {
-                                knownTrackIds.add(s.id)
-                                allTracks.push(s)
-                            }
-                        })
-                        renderExplorer()
-                    }
-                })
+            
+            // Wenn manuelle Tracks konfiguriert sind, verwende diese
+            if (config && config.tracks && config.tracks.length > 0) {
+                allTracks = config.tracks.map(t => ({
+                    id: t.id,
+                    title: t.title,
+                    user: { username: t.artist || '' },
+                    duration: t.duration || 0,
+                    artwork_url: t.artwork_url || null,
+                    permalink_url: t.permalink_url || ''
+                }))
+                knownTrackIds = new Set(allTracks.map(t => t.id))
+                renderExplorer()
                 return
             }
-
-            try {
-                // Schritt 1: oEmbed um die kanonische URL zu bekommen
-                const oembedResp = await fetch(
-                    `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(config.url)}`
-                )
-                const oembedData = await oembedResp.json()
-                
-                // Schritt 2: Resolve Endpoint für alle Tracks
-                const resolveResp = await fetch(
-                    `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(config.url)}&client_id=iZc9dWuGcIsaYQzClV1U58VYi6w9X1b6&app_version=1712331398&app_locale=en`
-                )
-                
-                if (resolveResp.ok) {
-                    const data = await resolveResp.json()
-                    if (data && data.tracks && data.tracks.length > 0) {
-                        allTracks = []
-                        knownTrackIds = new Set()
-                        
-                        data.tracks.forEach((track, i) => {
-                            const soundData = {
-                                id: track.id,
-                                title: track.title || `Track ${i + 1}`,
-                                user: {
-                                    username: track.user?.username || track.publisher_metadata?.artist || ''
-                                },
-                                duration: track.duration || track.full_duration || 0,
-                                artwork_url: track.artwork_url || null,
-                                permalink_url: track.permalink_url || ''
-                            }
-                            allTracks.push(soundData)
-                            knownTrackIds.add(track.id)
-                        })
-                        
-                        renderExplorer()
-                        
-                        // Current Track Info updaten
-                        widget.getCurrentSound((sound) => {
-                            if (sound) {
-                                updateTrackInfo(sound, 0)
-                            }
-                        })
-                    }
+            
+            // Fallback: Widget API
+            loadFromWidget()
+        }
+        
+        const loadFromWidget = () => {
+            widget.getSounds((sounds) => {
+                if (sounds && sounds.length > 0) {
+                    sounds.forEach(s => {
+                        if (!knownTrackIds.has(s.id)) {
+                            knownTrackIds.add(s.id)
+                            allTracks.push(s)
+                        }
+                    })
+                    renderExplorer()
                 }
-            } catch (err) {
-                console.warn('Could not fetch full playlist via API, falling back to widget:', err)
-                // Fallback: Widget API
-                widget.getSounds((sounds) => {
-                    if (sounds && sounds.length > 0) {
-                        sounds.forEach(s => {
-                            if (!knownTrackIds.has(s.id)) {
-                                knownTrackIds.add(s.id)
-                                allTracks.push(s)
-                            }
-                        })
-                        renderExplorer()
-                    }
-                })
-            }
+            })
         }
 
-        // Playlist-Config
+        // Playlist-Config mit Track-Daten
         const playlists = {
             '2025': {
                 label: 'KUH25',
                 playlistId: 'soundcloud:playlists:2158762997',
-                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025'
+                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
+                tracks: []
             },
             '2024': {
                 label: 'KUH24',
                 playlistId: 'soundcloud:playlists:1839382410',
-                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024'
+                url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024',
+                tracks: [
+                    {
+                        id: 1850441985,
+                        title: 'Ada Luvv + Low Key',
+                        artist: 'KuH Festival',
+                        duration: 10588000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ada-luvv-low-ki'
+                    },
+                    {
+                        id: 1960863663,
+                        title: 'Andrea Ida',
+                        artist: 'KuH Festival',
+                        duration: 4392000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-andreaida'
+                    },
+                    {
+                        id: 1849889655,
+                        title: 'DJ Ebhardy (Live)',
+                        artist: 'KuH Festival',
+                        duration: 3527000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-dj-ebhardy-live'
+                    },
+                    {
+                        id: 1849877574,
+                        title: 'FEELX',
+                        artist: 'KuH Festival',
+                        duration: 6570000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-feelx'
+                    },
+                    {
+                        id: 1849882230,
+                        title: 'C. Comberti',
+                        artist: 'KuH Festival',
+                        duration: 7342000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-c-comberti'
+                    },
+                    {
+                        id: 1849896948,
+                        title: 'Olgica',
+                        artist: 'KuH Festival',
+                        duration: 7196000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-olgica'
+
+                    },
+                    {
+                        id: 1853123916,
+                        title: 'Herr Dobler',
+                        artist: 'KuH Festival',
+                        duration: 8163000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-herr-dobler'
+                    },
+                    {
+                        id: 1850918733,
+                        title: 'Sarmabot',
+                        artist: 'KuH Festival',
+                        duration: 8810000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-sarmabot'
+                    },
+                    {
+                        id: 1850458515,
+                        title: 'Paul Linke',
+                        artist: 'KuH Festival',
+                        duration: 8810000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-paul-linke'
+                    },
+                    {
+                        id: 1853109525,
+                        title: 'DJ Blech + DJ Gerhardt + Riin',
+                        artist: 'KuH Festival',
+                        duration: 9428000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-blech-gerhardt-riin'
+                    },
+                    {
+                        id: 1853127528,
+                        title: 'Kanapee Nordwand',
+                        artist: 'KuH Festival',
+                        duration: 5331000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-kp'
+                    },
+                    {
+                        id: 1850447952,
+                        title: 'Kessel Vale',
+                        artist: 'KuH Festival',
+                        duration: 7359000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-kessel-vale'
+                    },
+                    {
+                        id: 1853198244,
+                        title: 'Filip',
+                        artist: 'KuH Festival',
+                        duration: 5883000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-filip'
+                    },
+                    {
+                        id: 1853088222,
+                        title: 'Lohrkraut + Zeitrapha',
+                        artist: 'KuH Festival',
+                        duration: 14364000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-lohrkraut-zeitrapha'
+                    },
+                    {
+                        id: 1853207016,
+                        title: 'N:in',
+                        artist: 'KuH Festival',
+                        duration: 6896000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-nin'
+                    },
+                    {
+                        id: 1853098089,
+                        title: 'Dypere',
+                        artist: 'KuH Festival',
+                        duration: 7614000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-dypere'
+                    },
+                    {
+                        id: 1853102538,
+                        title: 'Esgeem',
+                        artist: 'KuH Festival',
+                        duration: 7552000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-esgeem'
+                    },
+                    {
+                        id: 1850848134,
+                        title: 'Ellice + SAT 70',
+                        artist: 'KuH Festival',
+                        duration: 7314000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ellice-sat70'
+                    },
+                    {
+                        id: 1853730015,
+                        title: 'Candy Pollard',
+                        artist: 'KuH Festival',
+                        duration: 7181000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-candy-pollard'
+                    },
+                    {
+                        id: 1850443131,
+                        title: 'Jan Loup',
+                        artist: 'KuH Festival',
+                        duration: 8750000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-jan-loup'
+                    },
+                    {
+                        id: 1850933517,
+                        title: 'tbhase',
+                        artist: 'KuH Festival',
+                        duration: 8750000, // in Millisekunden, z.B. 3600000 = 60 Min
+                        artwork_url: null,
+                        permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-tbhase'
+                    }
+                    // Mehr Tracks hier einfügen:
+                    // {
+                    //     id: SOUNDCLOUD_TRACK_ID,
+                    //     title: 'Titel',
+                    //     artist: 'Artist',
+                    //     duration: 0,  // in Millisekunden, z.B. 3600000 = 60 Min
+                    //     artwork_url: null,
+                    //     permalink_url: 'https://soundcloud.com/...'
+                    // }
+                ]
             }
         }
+
+        // Track-Daten automatisch vom Widget laden und speichern
+        // Nach dem ersten Laden werden die Tracks im explorer angezeigt
+        // und beim Navigieren durch die Playlist ergänzt
 
         // SoundCloud iframe URL builder
         const buildPlaylistUrl = (playlistId) => {
