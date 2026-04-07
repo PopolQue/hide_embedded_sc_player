@@ -12,7 +12,6 @@ export default function NewsArticle() {
           <h1 className="newsTitle">Recordings from KUH24</h1>
           <p className="newsDate">April 2025</p>
         </div>
-        
         <div className="newsBody">
           <p className="newsText">
             Die Aufzeichnungen vom Klein und Haarig Festival 2024 sind jetzt verfügbar. 

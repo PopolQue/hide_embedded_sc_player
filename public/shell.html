@@ -332,7 +332,7 @@
 <body>
     <!-- Versteckter SoundCloud iframe -->
     <iframe id="sc-widget" class="hidden-iframe" 
-        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1839382410&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true">
+        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2158762997&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true">
     </iframe>
 
     <div class="shell-container">
@@ -354,8 +354,8 @@
 
             <div class="controls">
                 <select id="year-select" class="year-select">
+                    <option value="2025|soundcloud:playlists:2158762997">KUH25</option>
                     <option value="2024|soundcloud:playlists:1839382410">KUH24</option>
-                    <!-- Add more years below -->
                 </select>
                 <button class="control-btn" id="prev-btn" aria-label="Previous">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -600,15 +600,14 @@
 
         // Playlist-Config
         const playlists = {
+            '2025': {
+                label: 'KUH25',
+                playlistId: 'soundcloud:playlists:2158762997'
+            },
             '2024': {
                 label: 'KUH24',
                 playlistId: 'soundcloud:playlists:1839382410'
             }
-            // Add more years here:
-            // '2023': {
-            //     label: 'KUH23',
-            //     playlistId: 'soundcloud:playlists:XXXXXXXXX'
-            // }
         }
 
         // SoundCloud iframe URL builder
@@ -618,7 +617,7 @@
 
         // Year selector
         const yearSelect = document.getElementById('year-select')
-        let currentPlaylistId = 'soundcloud:playlists:1839382410'
+        let currentPlaylistId = 'soundcloud:playlists:2158762997'
 
         const switchPlaylist = (playlistId) => {
             if (playlistId === currentPlaylistId) return
