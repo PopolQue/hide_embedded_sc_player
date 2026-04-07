@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1a1a24;
+            color: #ffffffde;
+            overflow: hidden;
+        }
+
+        .player-bar {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            height: 80px;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            min-width: 0;
+        }
+
+        .track-artwork {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .track-artwork.placeholder {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .track-artwork.placeholder svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .track-text {
+            min-width: 0;
+        }
+
+        .track-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #ffffffde;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .control-btn.play {
+            background: #aa3bff;
+            width: 40px;
+            height: 40px;
+        }
+
+        .control-btn.play:hover {
+            background: #9a2bff;
+        }
+
+        .progress-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time {
+            font-size: 11px;
+            color: #9ca3af;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #aa3bff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .hidden-iframe {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        /* Track Explorer Panel */
+        .explorer-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            max-height: 400px;
+            background: #242430;
+            border-top: 1px solid #333842;
+            border-left: 1px solid #333842;
+            border-radius: 8px 0 0 0;
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+        }
+
+        .explorer-panel.open {
+            display: flex;
+        }
+
+        .explorer-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #333842;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .explorer-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffffde;
+        }
+
+        .explorer-close {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 18px;
+        }
+
+        .explorer-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .explorer-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .explorer-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .track-item.active {
+            background: rgba(170, 59, 255, 0.15);
+        }
+
+        .track-item-num {
+            font-size: 12px;
+            color: #9ca3af;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .track-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track-item-title {
+            font-size: 13px;
+            color: #ffffffde;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-item-duration {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .explorer-toggle {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        .explorer-toggle:hover {
+            color: #ffffffde;
+        }
+
+        @media (max-width: 768px) {
+            .player-bar {
+                grid-template-columns: 1fr auto;
+                height: 70px;
+                padding: 0 12px;
+                gap: 12px;
+            }
+
+            .progress-section {
+                display: none;
+            }
+
+            .track-title {
+                font-size: 13px;
+            }
+
+            .explorer-panel {
+                width: 100%;
+                right: 0;
+                border-radius: 0;
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <iframe id="sc-widget" class="hidden-iframe" 
+        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1839382410&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false">
+    </iframe>
+
+    <div class="player-bar">
+        <div class="track-info">
+            <div class="track-artwork placeholder" id="artwork">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+            </div>
+            <div class="track-text">
+                <div class="track-title" id="title">Loading...</div>
+                <div class="track-artist" id="artist"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="prev-btn" aria-label="Previous">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                </svg>
+            </button>
+            <button class="control-btn play" id="play-btn" aria-label="Play">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" id="play-icon">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </button>
+            <button class="control-btn" id="next-btn" aria-label="Next">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                </svg>
+            </button>
+            <button class="explorer-toggle" id="explorer-toggle" aria-label="Playlist">
+                &#9776;
+            </button>
+        </div>
+
+        <div class="progress-section">
+            <span class="time" id="current-time">0:00</span>
+            <div class="progress-bar" id="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="time" id="duration">0:00</span>
+        </div>
+    </div>
+
+    <!-- Track Explorer -->
+    <div class="explorer-panel" id="explorer-panel">
+        <div class="explorer-header">
+            <h3 id="playlist-title">Playlist</h3>
+            <button class="explorer-close" id="explorer-close">&times;</button>
+        </div>
+        <div class="explorer-list" id="explorer-list"></div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('sc-widget')
+        const widget = SC.Widget(iframe)
+
+        const titleEl = document.getElementById('title')
+        const artistEl = document.getElementById('artist')
+        const artworkEl = document.getElementById('artwork')
+        const playBtn = document.getElementById('play-btn')
+        const playIcon = document.getElementById('play-icon')
+        const prevBtn = document.getElementById('prev-btn')
+        const nextBtn = document.getElementById('next-btn')
+        const progressBar = document.getElementById('progress-bar')
+        const progressFill = document.getElementById('progress-fill')
+        const currentTimeEl = document.getElementById('current-time')
+        const durationEl = document.getElementById('duration')
+        const explorerToggle = document.getElementById('explorer-toggle')
+        const explorerPanel = document.getElementById('explorer-panel')
+        const explorerList = document.getElementById('explorer-list')
+        const playlistTitle = document.getElementById('playlist-title')
+        const explorerClose = document.getElementById('explorer-close')
+
+        let isPlaying = false
+        let currentDuration = 0
+        let allTracks = []
+        let currentTrackIndex = 0
+
+        const formatTime = (ms) => {
+            if (!ms || isNaN(ms) || ms <= 0) return '0:00'
+            const totalSeconds = Math.floor(ms / 1000)
+            const minutes = Math.floor(totalSeconds / 60)
+            const seconds = totalSeconds % 60
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`
+        }
+
+        const updateTrackInfo = (sound, index) => {
+            if (!sound) return
+            titleEl.textContent = sound.title || `Track ${index + 1}`
+            artistEl.textContent = sound.user?.username || ''
+            
+            if (sound.artwork_url) {
+                artworkEl.innerHTML = `<img src="${sound.artwork_url.replace('-large', '-t500x500')}" class="track-artwork" alt="Artwork">`
+            } else {
+                artworkEl.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`
+                artworkEl.className = 'track-artwork placeholder'
+            }
+        }
+
+        const renderExplorer = () => {
+            if (allTracks.length === 0) {
+                explorerList.innerHTML = '<p style="padding: 16px; color: #9ca3af;">Loading...</p>'
+                return
+            }
+
+            playlistTitle.textContent = `Playlist (${allTracks.length} Tracks)`
+            explorerList.innerHTML = allTracks.map((track, i) => `
+                <div class="track-item ${i === currentTrackIndex ? 'active' : ''}" data-index="${i}">
+                    <span class="track-item-num">${i + 1}</span>
+                    <div class="track-item-info">
+                        <div class="track-item-title">${track.title || `Track ${i + 1}`}</div>
+                        <div class="track-item-duration">${formatTime(track.duration)}</div>
+                    </div>
+                </div>
+            `).join('')
+
+            // Click Handler
+            explorerList.querySelectorAll('.track-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const index = parseInt(el.dataset.index)
+                    navigateToTrack(index)
+                })
+            })
+        }
+
+        const updatePlayIcon = (playing) => {
+            isPlaying = playing
+            playIcon.innerHTML = playing 
+                ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+                : '<path d="M8 5v14l11-7z"/>'
+            
+            // Update active state in explorer
+            explorerList.querySelectorAll('.track-item').forEach((el, i) => {
+                el.classList.toggle('active', i === currentTrackIndex && playing)
+            })
+        }
+
+        // Navigation zu bestimmtem Track
+        let targetIndex = null
+        let isNavigating = false
+
+        const navigateToTrack = (index) => {
+            if (index === currentTrackIndex) {
+                widget.play()
+                return
+            }
+
+            targetIndex = index
+            isNavigating = true
+            
+            const diff = index - currentTrackIndex
+            if (diff > 0) {
+                widget.next()
+            } else {
+                widget.prev()
+            }
+        }
+
+        // Event Listener
+        widget.bind(SC.Widget.Events.READY, () => {
+            widget.getSounds((sounds) => {
+                allTracks = sounds
+                renderExplorer()
+            })
+            
+            widget.getCurrentSound((sound) => {
+                if (sound) {
+                    updateTrackInfo(sound, 0)
+                    widget.getDuration((dur) => {
+                        currentDuration = dur
+                        durationEl.textContent = formatTime(dur)
+                    })
+                }
+            })
+        })
+
+        widget.bind(SC.Widget.Events.PLAY, () => updatePlayIcon(true))
+        widget.bind(SC.Widget.Events.PAUSE, () => updatePlayIcon(false))
+
+        widget.bind(SC.Widget.Events.SOUND_CHANGE, () => {
+            widget.getSounds((sounds) => {
+                // Update track list (might have more data now)
+                if (sounds.length > allTracks.length) {
+                    allTracks = sounds
+                    renderExplorer()
+                }
+                
+                widget.getCurrentSound((sound) => {
+                    if (sound) {
+                        const index = sounds.findIndex(s => s.id === sound.id)
+                        if (index >= 0) {
+                            currentTrackIndex = index
+                        }
+                        
+                        updateTrackInfo(sound, currentTrackIndex)
+                        renderExplorer() // Re-render to update active state
+                        
+                        widget.getDuration((dur) => {
+                            currentDuration = dur
+                            durationEl.textContent = formatTime(dur)
+                        })
+                        
+                        // If navigating, check if we reached target
+                        if (isNavigating && targetIndex !== null) {
+                            if (currentTrackIndex === targetIndex) {
+                                isNavigating = false
+                                targetIndex = null
+                                widget.play()
+                            } else {
+                                // Keep navigating
+                                const diff = targetIndex - currentTrackIndex
+                                if (diff > 0) {
+                                    widget.next()
+                                } else {
+                                    widget.prev()
+                                }
+                            }
+                        }
+                    }
+                })
+            })
+        })
+
+        // Progress Update
+        setInterval(() => {
+            widget.getPosition((pos) => {
+                progressFill.style.width = currentDuration ? `${(pos / currentDuration) * 100}%` : '0%'
+                currentTimeEl.textContent = formatTime(pos)
+            })
+        }, 500)
+
+        // Controls
+        playBtn.addEventListener('click', () => widget.toggle())
+        prevBtn.addEventListener('click', () => widget.prev())
+        nextBtn.addEventListener('click', () => widget.next())
+
+        // Explorer Toggle
+        explorerToggle.addEventListener('click', () => {
+            explorerPanel.classList.toggle('open')
+        })
+        explorerClose.addEventListener('click', () => {
+            explorerPanel.classList.remove('open')
+        })
+
+        // Progress Bar Click
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect()
+            const percent = (e.clientX - rect.left) / rect.width
+            widget.seekTo(Math.floor(currentDuration * percent))
+        })
+
+        // Messages von Shell
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'PLAYER_COMMAND') {
+                const cmd = event.data.command
+                if (cmd === 'play') widget.play()
+                else if (cmd === 'pause') widget.pause()
+                else if (cmd === 'toggle') widget.toggle()
+                else if (cmd === 'next') widget.next()
+                else if (cmd === 'prev') widget.prev()
+            }
+        })
+    </script>
+</body>
+</html>
