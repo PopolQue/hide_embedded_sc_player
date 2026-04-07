@@ -1,4 +1,0 @@
-.mainContent {
-  min-height: calc(100vh - var(--navbar-height, 85px));
-  padding-top: var(--navbar-height, 85px);
-}
