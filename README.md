@@ -145,7 +145,7 @@ npm run build     # Build library
 
 ## Architecture
 
-The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://w.soundcloud.com/player/api.js).
+The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://developers.soundcloud.com/docs/api/html5-widget).
 All track metadata is provided locally in config — no API calls needed at runtime.
 
 The **shell pattern** wraps your site in two frames:
