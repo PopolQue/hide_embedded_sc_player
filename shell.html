@@ -1,89 +1,157 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klein und Haarig</title>
+  <title>Your Festival Name</title>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       SC-Player Shell — Drop this file on any website
-       1. Edit PLAYER_CONFIG below with your playlists & theme
-       2. Upload to your server
-       3. Users see a persistent player at the bottom
-       ═══════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SC-Player Shell — Drop-in persistent audio player
+       ═══════════════════════════════════════════════════════════════════
 
-  <style>
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    #content {
-      width: 100%;
-      height: calc(100vh - var(--bar-h, 64px));
-      border: none;
-    }
-    /* Your site's content styles go here */
-  </style>
+       HOW TO USE:
+       1. Edit the PLAYER_CONFIG object below with your data
+       2. Change the content iframe src to your website
+       3. Upload both this file and sc-player-standalone.js to your server
+       4. Done — users see your site with a persistent player bar
 
-  <!-- SoundCloud Widget API -->
+       FINDING YOUR PLAYLIST ID:
+       - Go to your SoundCloud playlist in the browser
+       - View page source and search for "soundcloud:playlists:"
+       - Or use the SoundCloud oEmbed API to resolve it
+
+       FINDING TRACK PERMALINK URLs:
+       - Open each track on SoundCloud
+       - Copy the full URL from the address bar
+       - Example: https://soundcloud.com/your-name/track-title
+  ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- SoundCloud Widget API — required for the player -->
   <script src="https://w.soundcloud.com/player/api.js"></script>
 
-  <!-- ═══ CONFIG: Edit this for your festival ═══ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PLAYER CONFIG — Edit everything in this block
+       ═══════════════════════════════════════════════════════════════════ -->
   <script>
     window.PLAYER_CONFIG = {
-      /* --- Theme: Customize colors --- */
+      /* ─── Theme: Customize colors and dimensions ─── */
       theme: {
-        bg: '#1a1a24',
-        border: '#333842',
-        text: '#ffffffde',
-        muted: '#9ca3af',
-        accent: '#aa3bff',
-        accentHover: '#9a2bff',
-        activeBg: 'rgba(170, 59, 255, 0.15)',
-        listBg: '#242430',
-        barHeight: '64px',
-        borderRadius: '4px',
+        bg: '#1a1a24',              // Player bar background
+        border: '#333842',          // Border / divider color
+        text: '#ffffffde',          // Primary text (title)
+        muted: '#9ca3af',           // Secondary text (artist, duration)
+        accent: '#aa3bff',          // Play button, progress bar, active state
+        accentHover: '#9a2bff',     // Play button hover color
+        activeBg: 'rgba(170, 59, 255, 0.15)',  // Active track highlight
+        listBg: '#242430',          // Track list panel background
+        barHeight: '64px',          // Height of the player bar
+        borderRadius: '4px',        // Artwork corner radius
         fontFamily: 'Inter, system-ui, sans-serif',
       },
 
-      /* --- Feature toggles --- */
-      showPlaylistSelect: true,
-      showTrackList: true,
-      showProgress: true,
-      showNavButtons: true,
-      autoplayOnSelect: true,
-      autoplayDelay: 500,
-      position: 'bottom',  // 'bottom' | 'top'
+      /* ─── Feature toggles ─── */
+      showPlaylistSelect: true,     // Show playlist selector dropdown
+      showTrackList: true,          // Show track list toggle button
+      showProgress: true,           // Show progress/seek bar
+      showNavButtons: true,         // Show prev / play / next buttons
+      autoplayOnSelect: true,       // Auto-play when clicking a track
+      autoplayDelay: 500,           // ms delay before auto-playing
+      position: 'bottom',           // Player bar position: 'bottom' or 'top'
 
-      /* --- Default playlist --- */
+      /* ─── Default playlist ─── */
+      // Must match one of the keys in the playlists object below
       defaultPlaylist: '2025',
 
-      /* --- Playlists: Add your years/releases here --- */
+      /* ─── Playlists ───
+         Add one entry per year / release / collection.
+         Each key (e.g. '2025', '2024') is used internally.
+         The 'label' is what users see in the dropdown.
+
+         To get track data:
+         1. Open each track on SoundCloud
+         2. Copy: title, artist, duration (ms), artwork URL, permalink URL
+         3. Duration in ms = seconds × 1000 (e.g. 3:30 = 210000)
+      */
       playlists: {
         '2025': {
-          label: 'KUH25',
-          playlistId: 'soundcloud:playlists:2158762997',
-          url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
+          label: 'Festival 2025',
+          playlistId: 'soundcloud:playlists:YOUR_PLAYLIST_ID_HERE',
+          url: 'https://soundcloud.com/your-account/sets/your-playlist',
           tracks: [
-            { id: 2158762997, title: 'Track 1', artist: 'Artist', duration: 3600000, artwork_url: null, permalink_url: 'https://soundcloud.com/...' }
+            {
+              id: 1,
+              title: 'Artist One — Track Title',
+              artist: 'Artist One',
+              duration: 3600000,  // 60 minutes in milliseconds
+              artwork_url: null,  // or 'https://i1.sndcdn.com/artworks-...-t1080x1080.jpg'
+              permalink_url: 'https://soundcloud.com/your-account/track-one'
+            },
+            // Add more tracks here...
           ]
         },
         '2024': {
-          label: 'KUH24',
-          playlistId: 'soundcloud:playlists:1839382410',
-          url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024',
+          label: 'Festival 2024',
+          playlistId: 'soundcloud:playlists:YOUR_PLAYLIST_ID_HERE',
+          url: 'https://soundcloud.com/your-account/sets/your-playlist-2024',
           tracks: [
-            { id: 1850441985, title: 'Ada Luvv + Low Key', artist: 'KuH Festival', duration: 10588000, artwork_url: 'https://i1.sndcdn.com/artworks-2v7ytXIlK3cmhMkY-yI6u1Q-t1080x1080.jpg', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ada-luvv-low-ki' },
-            { id: 1960863663, title: 'Andrea Ida', artist: 'KuH Festival', duration: 4392000, artwork_url: 'https://i1.sndcdn.com/artworks-3FwKNGEo3yqV22MH-X2Pnsg-t1080x1080.png', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-andreaida' },
+            {
+              id: 2,
+              title: 'Artist Two — Live Set',
+              artist: 'Artist Two',
+              duration: 7200000,
+              artwork_url: null,
+              permalink_url: 'https://soundcloud.com/your-account/track-two'
+            },
           ]
         }
       },
 
-      /* --- SoundCloud embed URL (used for the hidden iframe) --- */
-      scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2158762997&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true'
+      /* ─── SoundCloud embed URL ───
+           This is the URL used for the hidden SoundCloud iframe.
+           It determines the initial playlist loaded by the widget.
+
+           To build your own:
+           1. Go to your SoundCloud playlist
+           2. Click Share → Embed
+           3. Copy the iframe src URL
+           4. Paste it below
+
+           Or use this template (replace the playlist ID):
+           https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253AYOUR_ID
+           &color=%23ff5500&auto_play=false&hide_related=true&show_comments=false
+           &show_user=false&show_reposts=false&show_teaser=false&visual=true
+      */
+      scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253AYOUR_PLAYLIST_ID_HERE&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true'
     }
   </script>
+
+  <!-- ═══ Page styles — replace with your own site styles ═══ -->
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+
+    #content {
+      width: 100%;
+      height: calc(100vh - var(--bar-h, 64px));
+      border: none;
+      display: block;
+    }
+
+    /* Body padding so content isn't hidden behind the player bar */
+    body {
+      --bar-h: 64px; /* matches theme.barHeight */
+    }
+  </style>
 </head>
 <body>
-  <!-- Content iframe — your festival website -->
-  <iframe id="content" src="/landing.html" title="Content"></iframe>
+  <!-- ═══ Content iframe — your actual website ═══
+       Change src to point to your festival / label website.
+       Navigation inside this frame will NOT reload the player. -->
+  <iframe
+    id="content"
+    src="about:blank"
+    title="Main content"
+    loading="lazy"
+  ></iframe>
 
   <!-- Player mounts here automatically -->
   <script src="sc-player-standalone.js"></script>

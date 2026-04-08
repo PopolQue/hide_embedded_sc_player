@@ -195,6 +195,19 @@
   border-radius: 8px 0 0 0;
   overflow-y: auto;
   z-index: 9998;
+
+  /* Standalone variant: toggle visibility via class */
+  display: none;
+}
+
+.sc-player__tracks--open {
+  display: block;
+}
+
+/* React variant: conditional rendering handles visibility, but
+   the panel is always rendered in the DOM for React */
+.sc-player .sc-player__tracks {
+  display: block;
 }
 
 .sc-player__track {
@@ -260,4 +273,40 @@
     left: 0;
     border-radius: 0;
   }
+  .sc-player__tracks--open {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+}
+
+/* ── Utility ───────────────────────────────────────────────────── */
+
+/* Screen reader only — visually hidden but accessible to AT */
+.sc-player__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Error state banner */
+.sc-player__error {
+  position: fixed;
+  bottom: calc(var(--scp-bar-h) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--scp-radius);
+  font-size: 13px;
+  z-index: 10000;
+  max-width: 90vw;
+  text-align: center;
 }

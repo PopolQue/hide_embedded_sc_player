@@ -1,18 +1,17 @@
-# @kleinundhaarig/sc-player
+# Hide Embedded SC Player
 
-A **reusable, themeable SoundCloud player** for festivals, labels, and radio stations. Persistent playback across page navigation.
+A **reusable, themeable SoundCloud player** for festivals, labels, and radio stations.
+Persistent playback across page navigation via a hidden iframe controlled by the Widget API.
+
+This is a research project for **Bunte Platte e.V.**, behind [Klein und Haarig Festival](https://www.kleinundhaarig.de).
 
 ## Quick Start
 
-### Option A — React Component (npm)
-
-```bash
-npm install @kleinundhaarig/sc-player
-```
+### React Component
 
 ```tsx
-import SCPlayer from '@kleinundhaarig/sc-player'
-import '@kleinundhaarig/sc-player/dist/style.css'
+import SCPlayer from './src/lib/SCPlayer'
+import './src/lib/SCPlayer.css'
 
 // Load SoundCloud API in your HTML:
 // <script src="https://w.soundcloud.com/player/api.js"></script>
@@ -28,9 +27,9 @@ function App() {
           tracks: [
             {
               id: 123456789,
-              title: 'Artist - Track Title',
+              title: 'Artist - Track',
               artist: 'Artist Name',
-              duration: 3600000, // milliseconds
+              duration: 3600000,
               artwork_url: 'https://i1.sndcdn.com/...',
               permalink_url: 'https://soundcloud.com/your-label/track'
             }
@@ -44,34 +43,11 @@ function App() {
 }
 ```
 
-### Option B — Drop-in Shell (no build)
+### Drop-in Shell (no build)
 
 1. Copy `shell.html` and `sc-player-standalone.js` to your server
 2. Edit `PLAYER_CONFIG` in `shell.html` with your playlists & theme
 3. Upload — done!
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <script src="https://w.soundcloud.com/player/api.js"></script>
-</head>
-<body>
-  <!-- Your site content -->
-  <iframe id="content" src="/your-site.html"></iframe>
-
-  <script>
-    window.PLAYER_CONFIG = {
-      defaultPlaylist: '2025',
-      scEmbedUrl: 'https://w.soundcloud.com/player/?url=...',
-      playlists: { /* your data */ },
-      theme: { accent: '#ff0000' }
-    }
-  </script>
-  <script src="sc-player-standalone.js"></script>
-</body>
-</html>
-```
 
 ## Theming
 
@@ -80,16 +56,16 @@ Every color and dimension is customizable via CSS custom properties:
 ```tsx
 <SCPlayer
   theme={{
-    bg: '#000000',         // Player bar background
-    border: '#333333',     // Border color
-    text: '#ffffff',       // Primary text
-    muted: '#888888',      // Secondary text (artist, duration)
-    accent: '#ff0000',     // Play button, progress bar, active state
-    accentHover: '#cc0000',// Play button hover
-    activeBg: 'rgba(255,0,0,0.15)', // Active track highlight
-    listBg: '#111111',     // Track list background
-    barHeight: '72px',     // Player bar height
-    borderRadius: '8px',   // Artwork corner radius
+    bg: '#000000',
+    border: '#333333',
+    text: '#ffffff',
+    muted: '#888888',
+    accent: '#ff0000',
+    accentHover: '#cc0000',
+    activeBg: 'rgba(255,0,0,0.15)',
+    listBg: '#111111',
+    barHeight: '72px',
+    borderRadius: '8px',
     fontFamily: 'Helvetica, sans-serif',
   }}
 />
@@ -164,23 +140,16 @@ interface Playlist {
 ```bash
 npm install
 npm run dev       # Start demo with hot reload
-npm run build     # Build library (ESM + CJS + types)
-npm run preview   # Preview built demo
-```
-
-## Publishing
-
-```bash
-npm version patch  # or minor / major
-npm publish --access public
+npm run build     # Build library
 ```
 
 ## Architecture
 
-The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://w.soundcloud.com/player/api.js). All track metadata is provided locally in config — no API calls needed at runtime.
+The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://w.soundcloud.com/player/api.js).
+All track metadata is provided locally in config — no API calls needed at runtime.
 
 The **shell pattern** wraps your site in two frames:
-- **Content frame** — your festival website (navigable without reloading player)
+- **Content frame** — your website (navigable without reloading player)
 - **Player bar** — fixed footer with persistent audio
 
 This ensures audio continues uninterrupted during page navigation, checkout flows, and login redirects.
