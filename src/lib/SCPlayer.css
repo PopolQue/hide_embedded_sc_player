@@ -1,0 +1,312 @@
+/* ── SCPlayer CSS ──────────────────────────────────────────────────
+   Fully themeable via CSS custom properties (--scp-*)
+   See README.md for all variables and defaults.
+────────────────────────────────────────────────────────────────── */
+
+.sc-player {
+  --scp-bg: #1a1a24;
+  --scp-border: #333842;
+  --scp-text: #ffffffde;
+  --scp-muted: #9ca3af;
+  --scp-accent: #aa3bff;
+  --scp-accent-hover: #9a2bff;
+  --scp-active-bg: rgba(170, 59, 255, 0.15);
+  --scp-list-bg: #242430;
+  --scp-bar-h: 64px;
+  --scp-radius: 4px;
+  --scp-font: Inter, system-ui, sans-serif;
+
+  font-family: var(--scp-font);
+}
+
+/* Hidden iframe */
+.sc-player__iframe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* ── Player Bar ────────────────────────────────────────────────── */
+.sc-player__bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: var(--scp-bar-h);
+  background: var(--scp-bg);
+  border-top: 1px solid var(--scp-border);
+}
+
+.sc-player--bottom .sc-player__bar { bottom: 0; }
+.sc-player--top .sc-player__bar {
+  top: 0;
+  border-top: none;
+  border-bottom: 1px solid var(--scp-border);
+}
+
+/* ── Track Info ────────────────────────────────────────────────── */
+.sc-player__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sc-player__artwork {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--scp-radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sc-player__artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sc-player__artwork-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 18px;
+}
+
+.sc-player__text { min-width: 0; }
+
+.sc-player__title {
+  color: var(--scp-text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-player__artist {
+  color: var(--scp-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Controls ──────────────────────────────────────────────────── */
+.sc-player__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-player__btn {
+  background: none;
+  border: none;
+  color: var(--scp-text);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 50%;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.sc-player__btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+.sc-player__btn--play {
+  background: var(--scp-accent) !important;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-player__btn--play:hover { background: var(--scp-accent-hover) !important; }
+
+.sc-player__select {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--scp-text);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--scp-radius);
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--scp-font);
+}
+
+.sc-player__select option {
+  background: var(--scp-bg);
+  color: var(--scp-text);
+}
+
+/* ── Progress Bar ──────────────────────────────────────────────── */
+.sc-player__progress {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.sc-player__progress-fill {
+  height: 100%;
+  background: var(--scp-accent);
+  border-radius: 2px;
+  transition: width 0.1s;
+}
+
+/* ── Track List Button ─────────────────────────────────────────── */
+.sc-player__tracks-btn {
+  background: none;
+  border: none;
+  color: var(--scp-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 8px;
+  font-family: var(--scp-font);
+  white-space: nowrap;
+}
+
+.sc-player__tracks-btn:hover { color: var(--scp-text); }
+
+/* ── Track List Dropdown ───────────────────────────────────────── */
+.sc-player__tracks {
+  position: fixed;
+  right: 0;
+  bottom: var(--scp-bar-h);
+  width: 340px;
+  max-height: 400px;
+  background: var(--scp-list-bg);
+  border: 1px solid var(--scp-border);
+  border-bottom: none;
+  border-radius: 8px 0 0 0;
+  overflow-y: auto;
+  z-index: 9998;
+
+  /* Standalone variant: toggle visibility via class */
+  display: none;
+}
+
+.sc-player__tracks--open {
+  display: block;
+}
+
+/* React variant: conditional rendering handles visibility, but
+   the panel is always rendered in the DOM for React */
+.sc-player .sc-player__tracks {
+  display: block;
+}
+
+.sc-player__track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--scp-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+  font-family: var(--scp-font);
+}
+
+.sc-player__track:hover { background: rgba(255, 255, 255, 0.05); }
+.sc-player__track.active { background: var(--scp-active-bg); }
+
+.sc-player__track-num {
+  color: var(--scp-muted);
+  font-size: 12px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sc-player__track-title {
+  flex: 1;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-player__track-dur {
+  color: var(--scp-muted);
+  font-size: 11px;
+}
+
+.sc-player__playing {
+  color: var(--scp-accent);
+  animation: scp-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes scp-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sc-player__bar {
+    padding: 0 12px;
+    height: 56px;
+    gap: 8px;
+  }
+  .sc-player__progress { display: none; }
+  .sc-player__select { max-width: 80px; }
+  .sc-player__tracks {
+    width: 100%;
+    right: 0;
+    left: 0;
+    border-radius: 0;
+  }
+  .sc-player__tracks--open {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+}
+
+/* ── Utility ───────────────────────────────────────────────────── */
+
+/* Screen reader only — visually hidden but accessible to AT */
+.sc-player__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Error state banner */
+.sc-player__error {
+  position: fixed;
+  bottom: calc(var(--scp-bar-h) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--scp-radius);
+  font-size: 13px;
+  z-index: 10000;
+  max-width: 90vw;
+  text-align: center;
+}

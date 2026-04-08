@@ -1,86 +1,155 @@
-# Klein und Haarig — Custom SoundCloud Player
+# Hide Embedded SC Player
 
-A research project for **Bunte Platte e.V.**, the organisation behind **Klein und Haarig Festival**.
+A **reusable, themeable SoundCloud player** for festivals, labels, and radio stations.
+Persistent playback across page navigation via a hidden iframe controlled by the Widget API.
 
-## Goal
+This is a research project for **Bunte Platte e.V.**, behind [Klein und Haarig Festival](https://www.kleinundhaarig.de).
 
-Embed SoundCloud playlists in a custom user interface on [kleinundhaarig.de](https://www.kleinundhaarig.de).
+## Quick Start
 
-## Architecture
+### React Component
 
-The site uses a **persistent shell** pattern:
+```tsx
+import SCPlayer from './src/lib/SCPlayer'
+import './src/lib/SCPlayer.css'
 
-```
-index.html (Shell)
-├── Content Frame → Landing page / sub-pages
-└── Player Bar (fixed footer)
-    └── Hidden SoundCloud iframe (controlled via Widget API)
-```
+// Load SoundCloud API in your HTML:
+// <script src="https://w.soundcloud.com/player/api.js"></script>
 
-The SoundCloud player runs in a hidden iframe at the bottom of the page and **persists across navigation**. The custom UI controls it via the [SoundCloud Widget API](https://w.soundcloud.com/player/api.js).
-
-## Features
-
-- **Custom Player UI** — Play/pause, prev/next, progress bar, volume
-- **Track Explorer** — Full playlist track list with active track highlighting
-- **Year Selector** — Switch between different festival years (2024, 2025, ...)
-- **Persistent Playback** — Audio continues playing when navigating between pages
-- **Track Metadata** — Title, artist, cover art, duration (hh:mm:ss) — stored locally in config
-- **Year/Playlist Config** — Add new years by adding entries to the `playlists` config object
-
-## Adding a New Year / Playlist
-
-Edit the `playlists` object in `index.html`:
-
-```js
-const playlists = {
-    '2025': {
-        label: 'KUH25',
-        playlistId: 'soundcloud:playlists:2158762997',
-        url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
-        tracks: [
+function App() {
+  return (
+    <SCPlayer
+      playlists={{
+        '2025': {
+          label: 'Festival 2025',
+          playlistId: 'soundcloud:playlists:YOUR_ID',
+          url: 'https://soundcloud.com/your-label/sets/2025',
+          tracks: [
             {
-                id: 1234567890,           // SoundCloud track ID (number)
-                title: 'Artist Name',
-                artist: 'KuH Festival',
-                duration: 3600000,       // Duration in milliseconds
-                artwork_url: 'https://i1.sndcdn.com/artworks-...',
-                permalink_url: 'https://soundcloud.com/...'
+              id: 123456789,
+              title: 'Artist - Track',
+              artist: 'Artist Name',
+              duration: 3600000,
+              artwork_url: 'https://i1.sndcdn.com/...',
+              permalink_url: 'https://soundcloud.com/your-label/track'
             }
-            // ... more tracks
-        ]
-    }
+          ]
+        }
+      }}
+      defaultPlaylist="2025"
+      scEmbedUrl="https://w.soundcloud.com/player/?url=..."
+    />
+  )
 }
 ```
 
-Also add the corresponding `<option>` to the year selector dropdown:
+### Drop-in Shell (no build)
 
-```html
-<select id="year-select" class="year-select">
-    <option value="2025|soundcloud:playlists:2158762997">KUH25</option>
-    <option value="2024|soundcloud:playlists:1839382410">KUH24</option>
-</select>
+1. Copy `shell.html` and `sc-player-standalone.js` to your server
+2. Edit `PLAYER_CONFIG` in `shell.html` with your playlists & theme
+3. Upload — done!
+
+## Theming
+
+Every color and dimension is customizable via CSS custom properties:
+
+```tsx
+<SCPlayer
+  theme={{
+    bg: '#000000',
+    border: '#333333',
+    text: '#ffffff',
+    muted: '#888888',
+    accent: '#ff0000',
+    accentHover: '#cc0000',
+    activeBg: 'rgba(255,0,0,0.15)',
+    listBg: '#111111',
+    barHeight: '72px',
+    borderRadius: '8px',
+    fontFamily: 'Helvetica, sans-serif',
+  }}
+/>
 ```
 
-And update `currentPlaylistId` to the default playlist.
+### Default Theme
+
+| Variable | Default |
+|----------|---------|
+| `bg` | `#1a1a24` |
+| `border` | `#333842` |
+| `text` | `#ffffffde` |
+| `muted` | `#9ca3af` |
+| `accent` | `#aa3bff` |
+| `accentHover` | `#9a2bff` |
+| `activeBg` | `rgba(170, 59, 255, 0.15)` |
+| `listBg` | `#242430` |
+| `barHeight` | `64px` |
+| `borderRadius` | `4px` |
+| `fontFamily` | `Inter, system-ui, sans-serif` |
+
+### CSS Override
+
+You can also override via CSS:
+
+```css
+.sc-player {
+  --scp-accent: #00ff88;
+  --scp-bg: #0a0a0a;
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `playlists` | `Record<string, Playlist>` | *required* | Available playlists |
+| `defaultPlaylist` | `string` | first key | Initial playlist |
+| `scEmbedUrl` | `string` | *required* | SoundCloud iframe embed URL |
+| `position` | `'bottom' \| 'top'` | `'bottom'` | Player bar position |
+| `theme` | `ThemeConfig` | `{}` | Theme overrides |
+| `showPlaylistSelect` | `boolean` | `true` | Show playlist dropdown |
+| `showTrackList` | `boolean` | `true` | Show track list button |
+| `showProgress` | `boolean` | `true` | Show progress bar |
+| `showNavButtons` | `boolean` | `true` | Show prev/play/next |
+| `autoplayOnSelect` | `boolean` | `true` | Auto-play on track click |
+| `autoplayDelay` | `number` | `500` | Delay before autoplay (ms) |
+| `className` | `string` | `''` | Extra CSS class |
+
+## Playlist Format
+
+```ts
+interface Track {
+  id: number              // SoundCloud track ID
+  title: string           // Display title
+  artist: string          // Display artist name
+  duration: number        // Duration in milliseconds
+  artwork_url?: string    // Cover image URL
+  permalink_url: string   // SoundCloud track permalink
+}
+
+interface Playlist {
+  label: string           // Display name (e.g. "2024")
+  playlistId: string      // soundcloud:playlists:ID
+  url: string             // Public SoundCloud playlist URL
+  tracks: Track[]         // Full track list
+}
+```
 
 ## Development
 
 ```bash
 npm install
-npm run dev      # Start dev server (opens /)
-npm run build    # Production build
+npm run dev       # Start demo with hot reload
+npm run build     # Build library
 ```
 
-## Tech Stack
+## Architecture
 
-- **Vite** — Build tool and dev server
-- **SoundCloud Widget API** — Controls the hidden iframe player
-- **Vanilla JS + HTML** in the shell (no framework needed for the player)
-- **React** (optional) — Available for content pages loaded in the content frame
+The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://w.soundcloud.com/player/api.js).
+All track metadata is provided locally in config — no API calls needed at runtime.
 
-## Test Playlist
+The **shell pattern** wraps your site in two frames:
+- **Content frame** — your website (navigable without reloading player)
+- **Player bar** — fixed footer with persistent audio
 
-2024 Recordings: https://on.soundcloud.com/JY8GKBvhtRcLK9yeyi
-
-2025 Recordings: https://on.soundcloud.com/D7IZuRXrefqeMqO582
+This ensures audio continues uninterrupted during page navigation, checkout flows, and login redirects.

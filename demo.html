@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCPlayer Demo</title>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      color: #eee;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding-bottom: 80px; /* space for player bar */
+    }
+    .demo-content {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    .demo-content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .demo-content p {
+      color: #9ca3af;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .demo-badge {
+      display: inline-block;
+      background: #00ff88;
+      color: #111;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .demo-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .demo-feature {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .demo-feature h3 {
+      font-size: 14px;
+      color: #00ff88;
+      margin-bottom: 4px;
+    }
+    .demo-feature p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-content">
+    <div class="demo-badge">Demo</div>
+    <h1>SCPlayer</h1>
+    <p>
+      A reusable, themeable SoundCloud player component for festivals, labels,
+      and radio stations. This demo uses a <strong>green accent theme</strong> to
+      show how easily colors can be customized.
+    </p>
+
+    <div class="demo-features">
+      <div class="demo-feature">
+        <h3>React Component</h3>
+        <p>Install via npm and use in any React app with full TypeScript support.</p>
+      </div>
+      <div class="demo-feature">
+        <h3>Themeable</h3>
+        <p>Every color and dimension is customizable via CSS custom properties.</p>
+      </div>
+      <div class="demo-feature">
+        <h3>Persistent Playback</h3>
+        <p>Use the shell pattern for audio that survives page navigation.</p>
+      </div>
+      <div class="demo-feature">
+        <h3>Accessible</h3>
+        <p>ARIA labels, roles, keyboard navigation, and screen-reader support.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="root"></div>
+
+  <script type="module">
+    import React from 'react'
+    import ReactDOM from 'react-dom/client'
+    import SCPlayer from './src/lib/SCPlayer.tsx'
+    import './src/lib/SCPlayer.css'
+
+    // Demo playlists with placeholder data
+    var playlists = {
+      '2025': {
+        label: 'Festival 2025',
+        playlistId: 'soundcloud:playlists:2158762997',
+        url: 'https://soundcloud.com/example/sets/2025',
+        tracks: [
+          {
+            id: 2115495039,
+            title: 'Glossy',
+            artist: 'Demo Artist One',
+            duration: 10862000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/glossy'
+          },
+          {
+            id: 2110295277,
+            title: 'Mark Lando — Live Set',
+            artist: 'Demo Artist Two',
+            duration: 10846000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/mark-lando'
+          },
+          {
+            id: 2238896972,
+            title: 'Sarmabot',
+            artist: 'Demo Artist Three',
+            duration: 8808000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/sarmabot'
+          },
+          {
+            id: 2242529078,
+            title: 'Aimz',
+            artist: 'Demo Artist Four',
+            duration: 3924000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/aimz'
+          }
+        ]
+      },
+      '2024': {
+        label: 'Festival 2024',
+        playlistId: 'soundcloud:playlists:1839382410',
+        url: 'https://soundcloud.com/example/sets/2024',
+        tracks: [
+          {
+            id: 1850441985,
+            title: 'Ada Luvv + Low Key',
+            artist: 'Demo Artist Five',
+            duration: 10588000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/ada-luvv'
+          },
+          {
+            id: 1960863663,
+            title: 'Andrea Ida',
+            artist: 'Demo Artist Six',
+            duration: 4392000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/andrea-ida'
+          },
+          {
+            id: 1849889655,
+            title: 'DJ Ebhardy (Live)',
+            artist: 'Demo Artist Seven',
+            duration: 3527000,
+            artwork_url: null,
+            permalink_url: 'https://soundcloud.com/example/dj-ebhardy'
+          }
+        ]
+      }
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      React.createElement(SCPlayer, {
+        playlists: playlists,
+        defaultPlaylist: '2025',
+        scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2158762997&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true',
+        position: 'bottom',
+        theme: {
+          // Green theme to demonstrate customization
+          accent: '#00ff88',
+          accentHover: '#00cc6a',
+          activeBg: 'rgba(0, 255, 136, 0.15)',
+          border: '#1a3a2a',
+        }
+      })
+    )
+  </script>
+</body>
+</html>
