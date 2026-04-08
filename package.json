@@ -1,14 +1,48 @@
 {
-  "name": "hide_embedded_sc_player",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@kleinundhaarig/sc-player",
+  "version": "1.0.0",
+  "description": "Reusable SoundCloud player component with persistent playback. Themeable, configurable, festival-ready.",
   "type": "module",
+  "main": "dist/sc-player.cjs.js",
+  "module": "dist/sc-player.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/sc-player.js",
+      "require": "./dist/sc-player.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./style.css": "./dist/style.css",
+    "./shell.html": "./shell.html",
+    "./sc-player-standalone.js": "./sc-player-standalone.js"
+  },
+  "files": ["dist", "shell.html", "sc-player-standalone.js"],
+  "sideEffects": ["**/*.css"],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite demo.html",
+    "build": "vite build --config vite.lib.config.ts",
+    "build:demo": "vite build",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["soundcloud", "player", "react", "festival", "music", "embed"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kleinundhaarig/sc-player"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "devDependencies": {
-    "vite": "^8.0.4"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.4",
+    "vite-plugin-dts": "^4.5.3"
   }
 }

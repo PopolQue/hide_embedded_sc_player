@@ -1,86 +1,186 @@
-# Klein und Haarig — Custom SoundCloud Player
+# @kleinundhaarig/sc-player
 
-A research project for **Bunte Platte e.V.**, the organisation behind **Klein und Haarig Festival**.
+A **reusable, themeable SoundCloud player** for festivals, labels, and radio stations. Persistent playback across page navigation.
 
-## Goal
+## Quick Start
 
-Embed SoundCloud playlists in a custom user interface on [kleinundhaarig.de](https://www.kleinundhaarig.de).
+### Option A — React Component (npm)
 
-## Architecture
-
-The site uses a **persistent shell** pattern:
-
-```
-index.html (Shell)
-├── Content Frame → Landing page / sub-pages
-└── Player Bar (fixed footer)
-    └── Hidden SoundCloud iframe (controlled via Widget API)
+```bash
+npm install @kleinundhaarig/sc-player
 ```
 
-The SoundCloud player runs in a hidden iframe at the bottom of the page and **persists across navigation**. The custom UI controls it via the [SoundCloud Widget API](https://w.soundcloud.com/player/api.js).
+```tsx
+import SCPlayer from '@kleinundhaarig/sc-player'
+import '@kleinundhaarig/sc-player/dist/style.css'
 
-## Features
+// Load SoundCloud API in your HTML:
+// <script src="https://w.soundcloud.com/player/api.js"></script>
 
-- **Custom Player UI** — Play/pause, prev/next, progress bar, volume
-- **Track Explorer** — Full playlist track list with active track highlighting
-- **Year Selector** — Switch between different festival years (2024, 2025, ...)
-- **Persistent Playback** — Audio continues playing when navigating between pages
-- **Track Metadata** — Title, artist, cover art, duration (hh:mm:ss) — stored locally in config
-- **Year/Playlist Config** — Add new years by adding entries to the `playlists` config object
-
-## Adding a New Year / Playlist
-
-Edit the `playlists` object in `index.html`:
-
-```js
-const playlists = {
-    '2025': {
-        label: 'KUH25',
-        playlistId: 'soundcloud:playlists:2158762997',
-        url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
-        tracks: [
+function App() {
+  return (
+    <SCPlayer
+      playlists={{
+        '2025': {
+          label: 'Festival 2025',
+          playlistId: 'soundcloud:playlists:YOUR_ID',
+          url: 'https://soundcloud.com/your-label/sets/2025',
+          tracks: [
             {
-                id: 1234567890,           // SoundCloud track ID (number)
-                title: 'Artist Name',
-                artist: 'KuH Festival',
-                duration: 3600000,       // Duration in milliseconds
-                artwork_url: 'https://i1.sndcdn.com/artworks-...',
-                permalink_url: 'https://soundcloud.com/...'
+              id: 123456789,
+              title: 'Artist - Track Title',
+              artist: 'Artist Name',
+              duration: 3600000, // milliseconds
+              artwork_url: 'https://i1.sndcdn.com/...',
+              permalink_url: 'https://soundcloud.com/your-label/track'
             }
-            // ... more tracks
-        ]
-    }
+          ]
+        }
+      }}
+      defaultPlaylist="2025"
+      scEmbedUrl="https://w.soundcloud.com/player/?url=..."
+    />
+  )
 }
 ```
 
-Also add the corresponding `<option>` to the year selector dropdown:
+### Option B — Drop-in Shell (no build)
+
+1. Copy `shell.html` and `sc-player-standalone.js` to your server
+2. Edit `PLAYER_CONFIG` in `shell.html` with your playlists & theme
+3. Upload — done!
 
 ```html
-<select id="year-select" class="year-select">
-    <option value="2025|soundcloud:playlists:2158762997">KUH25</option>
-    <option value="2024|soundcloud:playlists:1839382410">KUH24</option>
-</select>
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+</head>
+<body>
+  <!-- Your site content -->
+  <iframe id="content" src="/your-site.html"></iframe>
+
+  <script>
+    window.PLAYER_CONFIG = {
+      defaultPlaylist: '2025',
+      scEmbedUrl: 'https://w.soundcloud.com/player/?url=...',
+      playlists: { /* your data */ },
+      theme: { accent: '#ff0000' }
+    }
+  </script>
+  <script src="sc-player-standalone.js"></script>
+</body>
+</html>
 ```
 
-And update `currentPlaylistId` to the default playlist.
+## Theming
+
+Every color and dimension is customizable via CSS custom properties:
+
+```tsx
+<SCPlayer
+  theme={{
+    bg: '#000000',         // Player bar background
+    border: '#333333',     // Border color
+    text: '#ffffff',       // Primary text
+    muted: '#888888',      // Secondary text (artist, duration)
+    accent: '#ff0000',     // Play button, progress bar, active state
+    accentHover: '#cc0000',// Play button hover
+    activeBg: 'rgba(255,0,0,0.15)', // Active track highlight
+    listBg: '#111111',     // Track list background
+    barHeight: '72px',     // Player bar height
+    borderRadius: '8px',   // Artwork corner radius
+    fontFamily: 'Helvetica, sans-serif',
+  }}
+/>
+```
+
+### Default Theme
+
+| Variable | Default |
+|----------|---------|
+| `bg` | `#1a1a24` |
+| `border` | `#333842` |
+| `text` | `#ffffffde` |
+| `muted` | `#9ca3af` |
+| `accent` | `#aa3bff` |
+| `accentHover` | `#9a2bff` |
+| `activeBg` | `rgba(170, 59, 255, 0.15)` |
+| `listBg` | `#242430` |
+| `barHeight` | `64px` |
+| `borderRadius` | `4px` |
+| `fontFamily` | `Inter, system-ui, sans-serif` |
+
+### CSS Override
+
+You can also override via CSS:
+
+```css
+.sc-player {
+  --scp-accent: #00ff88;
+  --scp-bg: #0a0a0a;
+}
+```
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `playlists` | `Record<string, Playlist>` | *required* | Available playlists |
+| `defaultPlaylist` | `string` | first key | Initial playlist |
+| `scEmbedUrl` | `string` | *required* | SoundCloud iframe embed URL |
+| `position` | `'bottom' \| 'top'` | `'bottom'` | Player bar position |
+| `theme` | `ThemeConfig` | `{}` | Theme overrides |
+| `showPlaylistSelect` | `boolean` | `true` | Show playlist dropdown |
+| `showTrackList` | `boolean` | `true` | Show track list button |
+| `showProgress` | `boolean` | `true` | Show progress bar |
+| `showNavButtons` | `boolean` | `true` | Show prev/play/next |
+| `autoplayOnSelect` | `boolean` | `true` | Auto-play on track click |
+| `autoplayDelay` | `number` | `500` | Delay before autoplay (ms) |
+| `className` | `string` | `''` | Extra CSS class |
+
+## Playlist Format
+
+```ts
+interface Track {
+  id: number              // SoundCloud track ID
+  title: string           // Display title
+  artist: string          // Display artist name
+  duration: number        // Duration in milliseconds
+  artwork_url?: string    // Cover image URL
+  permalink_url: string   // SoundCloud track permalink
+}
+
+interface Playlist {
+  label: string           // Display name (e.g. "2024")
+  playlistId: string      // soundcloud:playlists:ID
+  url: string             // Public SoundCloud playlist URL
+  tracks: Track[]         // Full track list
+}
+```
 
 ## Development
 
 ```bash
 npm install
-npm run dev      # Start dev server (opens /)
-npm run build    # Production build
+npm run dev       # Start demo with hot reload
+npm run build     # Build library (ESM + CJS + types)
+npm run preview   # Preview built demo
 ```
 
-## Tech Stack
+## Publishing
 
-- **Vite** — Build tool and dev server
-- **SoundCloud Widget API** — Controls the hidden iframe player
-- **Vanilla JS + HTML** in the shell (no framework needed for the player)
-- **React** (optional) — Available for content pages loaded in the content frame
+```bash
+npm version patch  # or minor / major
+npm publish --access public
+```
 
-## Test Playlist
+## Architecture
 
-2024 Recordings: https://on.soundcloud.com/JY8GKBvhtRcLK9yeyi
+The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://w.soundcloud.com/player/api.js). All track metadata is provided locally in config — no API calls needed at runtime.
 
-2025 Recordings: https://on.soundcloud.com/D7IZuRXrefqeMqO582
+The **shell pattern** wraps your site in two frames:
+- **Content frame** — your festival website (navigable without reloading player)
+- **Player bar** — fixed footer with persistent audio
+
+This ensures audio continues uninterrupted during page navigation, checkout flows, and login redirects.

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klein und Haarig</title>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SC-Player Shell — Drop this file on any website
+       1. Edit PLAYER_CONFIG below with your playlists & theme
+       2. Upload to your server
+       3. Users see a persistent player at the bottom
+       ═══════════════════════════════════════════════════════════ -->
+
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    #content {
+      width: 100%;
+      height: calc(100vh - var(--bar-h, 64px));
+      border: none;
+    }
+    /* Your site's content styles go here */
+  </style>
+
+  <!-- SoundCloud Widget API -->
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+
+  <!-- ═══ CONFIG: Edit this for your festival ═══ -->
+  <script>
+    window.PLAYER_CONFIG = {
+      /* --- Theme: Customize colors --- */
+      theme: {
+        bg: '#1a1a24',
+        border: '#333842',
+        text: '#ffffffde',
+        muted: '#9ca3af',
+        accent: '#aa3bff',
+        accentHover: '#9a2bff',
+        activeBg: 'rgba(170, 59, 255, 0.15)',
+        listBg: '#242430',
+        barHeight: '64px',
+        borderRadius: '4px',
+        fontFamily: 'Inter, system-ui, sans-serif',
+      },
+
+      /* --- Feature toggles --- */
+      showPlaylistSelect: true,
+      showTrackList: true,
+      showProgress: true,
+      showNavButtons: true,
+      autoplayOnSelect: true,
+      autoplayDelay: 500,
+      position: 'bottom',  // 'bottom' | 'top'
+
+      /* --- Default playlist --- */
+      defaultPlaylist: '2025',
+
+      /* --- Playlists: Add your years/releases here --- */
+      playlists: {
+        '2025': {
+          label: 'KUH25',
+          playlistId: 'soundcloud:playlists:2158762997',
+          url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
+          tracks: [
+            { id: 2158762997, title: 'Track 1', artist: 'Artist', duration: 3600000, artwork_url: null, permalink_url: 'https://soundcloud.com/...' }
+          ]
+        },
+        '2024': {
+          label: 'KUH24',
+          playlistId: 'soundcloud:playlists:1839382410',
+          url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024',
+          tracks: [
+            { id: 1850441985, title: 'Ada Luvv + Low Key', artist: 'KuH Festival', duration: 10588000, artwork_url: 'https://i1.sndcdn.com/artworks-2v7ytXIlK3cmhMkY-yI6u1Q-t1080x1080.jpg', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ada-luvv-low-ki' },
+            { id: 1960863663, title: 'Andrea Ida', artist: 'KuH Festival', duration: 4392000, artwork_url: 'https://i1.sndcdn.com/artworks-3FwKNGEo3yqV22MH-X2Pnsg-t1080x1080.png', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-andreaida' },
+          ]
+        }
+      },
+
+      /* --- SoundCloud embed URL (used for the hidden iframe) --- */
+      scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2158762997&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true'
+    }
+  </script>
+</head>
+<body>
+  <!-- Content iframe — your festival website -->
+  <iframe id="content" src="/landing.html" title="Content"></iframe>
+
+  <!-- Player mounts here automatically -->
+  <script src="sc-player-standalone.js"></script>
+</body>
+</html>

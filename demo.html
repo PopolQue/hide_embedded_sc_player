@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCPlayer Demo</title>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+</head>
+<body style="margin:0;background:#111;color:#fff;font-family:system-ui;">
+  <div id="root"></div>
+  <script type="module">
+    import React from 'react'
+    import ReactDOM from 'react-dom/client'
+    import SCPlayer from './src/lib/SCPlayer.tsx'
+    import './src/lib/SCPlayer.css'
+
+    const playlists = {
+      '2025': {
+        label: 'Festival 2025',
+        playlistId: 'soundcloud:playlists:2158762997',
+        url: 'https://soundcloud.com/kleinundhaarig/sets/kuh-2025',
+        tracks: [
+          { id: 2158762997, title: 'Demo Track 2025', artist: 'Demo Artist', duration: 3600000, artwork_url: null, permalink_url: 'https://soundcloud.com/demo/track' }
+        ]
+      },
+      '2024': {
+        label: 'Festival 2024',
+        playlistId: 'soundcloud:playlists:1839382410',
+        url: 'https://soundcloud.com/kleinundhaarig/sets/kuh2024',
+        tracks: [
+          { id: 1850441985, title: 'Ada Luvv + Low Key', artist: 'KuH Festival', duration: 10588000, artwork_url: 'https://i1.sndcdn.com/artworks-2v7ytXIlK3cmhMkY-yI6u1Q-t1080x1080.jpg', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-ada-luvv-low-ki' },
+          { id: 1960863663, title: 'Andrea Ida', artist: 'KuH Festival', duration: 4392000, artwork_url: 'https://i1.sndcdn.com/artworks-3FwKNGEo3yqV22MH-X2Pnsg-t1080x1080.png', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-andreaida' },
+          { id: 1849889655, title: 'DJ Ebhardy (Live)', artist: 'KuH Festival', duration: 3527000, artwork_url: 'https://i1.sndcdn.com/artworks-BgUCOrCpVGMgeRAz-uJgNxQ-t1080x1080.jpg', permalink_url: 'https://soundcloud.com/kleinundhaarig/2024-dj-ebhardy-live' },
+        ]
+      }
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      React.createElement('div', null,
+        React.createElement('div', { style: { maxWidth: 700, margin: '0 auto', padding: '40px 20px' } },
+          React.createElement('h1', null, 'SCPlayer Demo'),
+          React.createElement('p', { style: { color: '#9ca3af' } },
+            'A reusable SoundCloud player component. Change the theme below.')
+        ),
+        React.createElement(SCPlayer, {
+          playlists: playlists,
+          defaultPlaylist: '2024',
+          scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1839382410&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true',
+          position: 'bottom',
+          theme: {
+            accent: '#00ff88',
+            accentHover: '#00cc6a',
+            activeBg: 'rgba(0, 255, 136, 0.15)',
+          }
+        })
+      )
+    )
+  </script>
+</body>
+</html>
