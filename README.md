@@ -49,6 +49,15 @@ function App() {
 2. Edit `PLAYER_CONFIG` in `shell.html` with your playlists & theme
 3. Upload — done!
 
+### Live Demo (GitHub Pages)
+
+A live demo is hosted at:
+
+**https://popolque.github.io/hide_embedded_sc_player/**
+
+The `docs/` folder contains `index.html` (the shell) and `sc-player-standalone.js`.
+To update the demo, edit `docs/index.html` and push to `main`.
+
 ## Theming
 
 Every color and dimension is customizable via CSS custom properties:
