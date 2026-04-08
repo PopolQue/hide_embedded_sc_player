@@ -204,12 +204,6 @@
   display: block;
 }
 
-/* React variant: conditional rendering handles visibility, but
-   the panel is always rendered in the DOM for React */
-.sc-player .sc-player__tracks {
-  display: block;
-}
-
 .sc-player__track {
   display: flex;
   align-items: center;
