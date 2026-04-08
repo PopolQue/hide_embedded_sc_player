@@ -3,7 +3,7 @@
 A **reusable, themeable SoundCloud player** for festivals, labels, and radio stations.
 Persistent playback across page navigation via a hidden iframe controlled by the Widget API.
 
-This is a research project for **Bunte Platte e.V.**, behind [Klein und Haarig Festival](https://www.kleinundhaarig.de).
+This is a research project for [Bunte Platte e.V.](https://www.bunte-platte.de), the organisation behind [Klein und Haarig Festival](https://www.kleinundhaarig.de).
 
 ## Quick Start
 
