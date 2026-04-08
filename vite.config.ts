@@ -6,8 +6,9 @@ export default defineConfig({
   plugins: [react()],
   root: '.',
   publicDir: false,
+  base: '/hide_embedded_sc_player/',
   server: {
-    open: '/demo.html',
+    open: '/docs/index.html',
     port: 3000,
   },
   build: {
@@ -15,7 +16,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        demo: resolve(__dirname, 'demo.html'),
+        demo: resolve(__dirname, 'docs/index.html'),
       },
     },
   },
