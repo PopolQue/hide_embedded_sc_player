@@ -9,9 +9,12 @@ This is a research project for [Bunte Platte e.V.](https://www.bunte-platte.de),
 
 ### React Component
 
+This project exports a React component that you can use by copying the source files into your project:
+
 ```tsx
-import SCPlayer from './src/lib/SCPlayer'
-import './src/lib/SCPlayer.css'
+// Copy src/lib/SCPlayer.tsx and src/lib/SCPlayer.css into your project
+import SCPlayer from './SCPlayer'
+import './SCPlayer.css'
 
 // Load SoundCloud API in your HTML:
 // <script src="https://w.soundcloud.com/player/api.js"></script>
