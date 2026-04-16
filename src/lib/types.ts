@@ -106,7 +106,7 @@ export interface ThemeConfig {
   accent?: string
   /** Accent hover color. Default: `#9a2bff` */
   accentHover?: string
-  /** Active track highlight background. Default: `rgba(170, 59, 255, 0.15)` */
+  /** Active track highlight background. Default: `rgba(100, 100, 100, 0.15)` */
   activeBg?: string
   /** Track list dropdown background. Default: `#242430` */
   listBg?: string
