@@ -19,14 +19,14 @@ function formatTime(ms: number): string {
 
 /** Default theme values — matches CSS custom property defaults */
 const DEFAULT_THEME = {
-  bg: '#1a1a24',
-  border: '#333842',
-  text: '#ffffffde',
+  bg: '#1d1d1d',
+  border: '#505050',
+  text: '#e7e7e7de',
   muted: '#9ca3af',
-  accent: '#aa3bff',
-  accentHover: '#9a2bff',
-  activeBg: 'rgba(170, 59, 255, 0.15)',
-  listBg: '#242430',
+  accent: '#e2e2e2',
+  accentHover: '#ffffff',
+  activeBg: 'rgba(52, 52, 52, 0.15)',
+  listBg: '#101010',
   barHeight: '64px',
   borderRadius: '4px',
   fontFamily: 'Inter, system-ui, sans-serif',
