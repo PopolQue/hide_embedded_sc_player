@@ -6,12 +6,12 @@
 .sc-player {
   --scp-bg: #1a1a24;
   --scp-border: #333842;
-  --scp-text: #ffffffde;
+  --scp-text: #d1d1d1de;
   --scp-muted: #9ca3af;
-  --scp-accent: #aa3bff;
-  --scp-accent-hover: #9a2bff;
-  --scp-active-bg: rgba(170, 59, 255, 0.15);
-  --scp-list-bg: #242430;
+  --scp-accent: #cfcfcf;
+  --scp-accent-hover: #fefdff;
+  --scp-active-bg: rgba(62, 62, 62, 0.15);
+  --scp-list-bg: #0c0c0c;
   --scp-bar-h: 64px;
   --scp-radius: 4px;
   --scp-font: Inter, system-ui, sans-serif;
@@ -80,7 +80,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #515151, #1a1a1a);
   color: #fff;
   font-size: 18px;
 }
@@ -122,7 +122,7 @@
   transition: background 0.2s;
 }
 
-.sc-player__btn:hover { background: rgba(255, 255, 255, 0.1); }
+.sc-player__btn:hover { background: rgba(29, 29, 29, 0.1); }
 
 .sc-player__btn--play {
   background: var(--scp-accent) !important;
@@ -136,9 +136,9 @@
 .sc-player__btn--play:hover { background: var(--scp-accent-hover) !important; }
 
 .sc-player__select {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(38, 38, 38, 0.1);
   color: var(--scp-text);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: var(--scp-radius);
   padding: 4px 8px;
   font-size: 12px;
@@ -155,7 +155,7 @@
 .sc-player__progress {
   flex: 1;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(187, 187, 187, 0.1);
   border-radius: 2px;
   cursor: pointer;
   position: relative;
@@ -219,7 +219,7 @@
   font-family: var(--scp-font);
 }
 
-.sc-player__track:hover { background: rgba(255, 255, 255, 0.05); }
+.sc-player__track:hover { background: rgba(48, 48, 48, 0.05); }
 .sc-player__track.active { background: var(--scp-active-bg); }
 
 .sc-player__track-num {
@@ -295,7 +295,7 @@
   bottom: calc(var(--scp-bar-h) + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: #dc2626;
+  background: #271212;
   color: #fff;
   padding: 8px 16px;
   border-radius: var(--scp-radius);
