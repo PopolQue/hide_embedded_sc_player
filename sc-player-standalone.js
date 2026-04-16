@@ -31,12 +31,12 @@
   /* ── CSS Custom Properties ──────────────────────────────────────── */
   var cssVars = [
     '--scp-bg:' + (theme.bg || '#1a1a24'),
-    '--scp-border:' + (theme.border || '#333842'),
+    '--scp-border:' + (theme.border || '#111316'),
     '--scp-text:' + (theme.text || '#ffffffde'),
-    '--scp-muted:' + (theme.muted || '#9ca3af'),
-    '--scp-accent:' + (theme.accent || '#aa3bff'),
-    '--scp-accent-hover:' + (theme.accentHover || '#9a2bff'),
-    '--scp-active-bg:' + (theme.activeBg || 'rgba(170,59,255,0.15)'),
+    '--scp-muted:' + (theme.muted || '#ffffff'),
+    '--scp-accent:' + (theme.accent || '#ffffff'),
+    '--scp-accent-hover:' + (theme.accentHover || '#ffffff'),
+    '--scp-active-bg:' + (theme.activeBg || 'rgba(12, 12, 12, 0.72)'),
     '--scp-list-bg:' + (theme.listBg || '#242430'),
     '--scp-bar-h:' + (theme.barHeight || '64px'),
     '--scp-radius:' + (theme.borderRadius || '4px'),
