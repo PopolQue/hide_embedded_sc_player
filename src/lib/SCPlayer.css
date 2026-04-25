@@ -9,7 +9,7 @@
   --scp-text: #d1d1d1de;
   --scp-muted: #9ca3af;
   --scp-accent: #cfcfcf;
-  --scp-accent-hover: #fefdff;
+  --scp-accent-hover: #000000;
   --scp-active-bg: rgba(62, 62, 62, 0.15);
   --scp-list-bg: #0c0c0c;
   --scp-bar-h: 64px;
@@ -122,7 +122,7 @@
   transition: background 0.2s;
 }
 
-.sc-player__btn:hover { background: rgba(29, 29, 29, 0.1); }
+.sc-player__btn:hover { background: rgba(0, 0, 0, 0.1); }
 
 .sc-player__btn--play {
   background: var(--scp-accent) !important;
@@ -219,7 +219,7 @@
   font-family: var(--scp-font);
 }
 
-.sc-player__track:hover { background: rgba(48, 48, 48, 0.05); }
+.sc-player__track:hover { background: rgba(0, 0, 0, 0.05); }
 .sc-player__track.active { background: var(--scp-active-bg); }
 
 .sc-player__track-num {
