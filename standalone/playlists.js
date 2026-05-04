@@ -27,7 +27,8 @@ window.PLAYER_PLAYLISTS =
       { "id": 2115576792, "title": "Firat & Burak", "artist": "KuH 2025", "duration": 12448000, "artwork_url": "https://i1.sndcdn.com/artworks-lCowgZAPdW2ho8yl-9AbV0w-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-firat-burak" },
       { "id": 2110288770, "title": "Riin", "artist": "KuH 2025", "duration": 11635000, "artwork_url": "https://i1.sndcdn.com/artworks-PYWBE8zLPIcu2B9s-l6PhWg-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-riin" },
       { "id": 2119371507, "title": "Kanapee Nordwand", "artist": "KuH 2025", "duration": 9065000, "artwork_url": "https://i1.sndcdn.com/artworks-ZHkRBfmX4Q84HuB3-eAyosQ-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-kanapee-nordwand" },
-      { "id": 2118623733, "title": "schnucki47", "artist": "KuH 2025", "duration": 10500000, "artwork_url": "https://i1.sndcdn.com/artworks-loyzQPsTMF7FztPT-LSaakw-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-schnucki47" }
+      { "id": 2118623733, "title": "schnucki47", "artist": "KuH 2025", "duration": 10500000, "artwork_url": "https://i1.sndcdn.com/artworks-loyzQPsTMF7FztPT-LSaakw-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-schnucki47" },
+      { "id": 2110263144, "title": "DJ Hybris", "artist": "KuH 2025", "duration": 33890000, "artwork_url": "https://i1.sndcdn.com/artworks-SCfVBiPAJ6n35wE7-namEkw-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-hybris" }
     ]
   },
   "2024": {
@@ -69,6 +70,7 @@ window.PLAYER_PLAYLISTS =
       { "id": 1577759070, "title": "Benedikt Frey", "artist": "KuH 2023", "duration": 8969000, "artwork_url": "https://i1.sndcdn.com/artworks-olM6iWc1OauerFyi-63yZ6Q-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2023-benedikt-frey" },
       { "id": 1577759103, "title": "Candy Pollard", "artist": "KuH 2023", "duration": 3563000, "artwork_url": "https://i1.sndcdn.com/artworks-Ql9pzGHxNJxeba2O-y8uwbA-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/candy-pollard-kuh-2023" },
       { "id": 1578745706, "title": "DJ Theory", "artist": "KuH 2023", "duration": 3876000, "artwork_url": "https://i1.sndcdn.com/artworks-NNWBIrX3FNRrKL4K-CMHqmw-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/dj-theory-kuh-2023" },
+      { "id": 1579345866, "title": "Jan Loup", "artist": "KuH 2023", "duration": 9048000, "artwork_url": "https://i1.sndcdn.com/artworks-44dP8y9fFTpz56L4-obz14g-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/jan-loup-kuh-2023" },
       { "id": 1578892162, "title": "Kiawash", "artist": "KuH 2023", "duration": 7060000, "artwork_url": "https://i1.sndcdn.com/artworks-Q0IY4pxJz6FkjlDi-GXrQCw-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2023-kiawash" },
       { "id": 1579149314, "title": "Lara Fein", "artist": "KuH 2023", "duration": 4024000, "artwork_url": "https://i1.sndcdn.com/artworks-NkzfXHlTFXy3jZ89-isoyyw-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/2023-larafein" },
       { "id": 1581627467, "title": "lu.wicked", "artist": "KuH 2023", "duration": 14491000, "artwork_url": "https://i1.sndcdn.com/artworks-AWNut7ksOLJgwgU3-FIyOYA-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/luwicked-kuh-2023" },
