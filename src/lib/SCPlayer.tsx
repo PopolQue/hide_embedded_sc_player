@@ -403,7 +403,18 @@ export default function SCPlayer({
               <div className="sc-player__title">No track selected</div>
             )}
             <div className="sc-player__artist">
-              {currentTrack?.artist ?? ''}
+              {currentTrack ? (
+                <a
+                  href={currentPlaylist.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`View ${currentPlaylist.label} on SoundCloud`}
+                >
+                  {currentTrack.artist}
+                </a>
+              ) : (
+                ''
+              )}
             </div>
           </div>
         </div>
