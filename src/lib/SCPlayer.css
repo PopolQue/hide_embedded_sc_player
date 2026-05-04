@@ -44,7 +44,10 @@
   border-top: 1px solid var(--scp-border);
 }
 
-.sc-player--bottom .sc-player__bar { bottom: 0; }
+.sc-player--bottom .sc-player__bar {
+  bottom: 0;
+}
+
 .sc-player--top .sc-player__bar {
   top: 0;
   border-top: none;
@@ -85,7 +88,9 @@
   font-size: 18px;
 }
 
-.sc-player__text { min-width: 0; }
+.sc-player__text {
+  min-width: 0;
+}
 
 .sc-player__title {
   color: var(--scp-text);
@@ -114,7 +119,7 @@
 .sc-player__btn {
   background: none;
   border: none;
-  color: var(--scp-text);
+  color: var(--scp-accent);
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 50%;
@@ -122,7 +127,9 @@
   transition: background 0.2s;
 }
 
-.sc-player__btn:hover { background: rgba(0, 0, 0, 0.1); }
+.sc-player__btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
 
 .sc-player__btn--play {
   background: var(--scp-accent) !important;
@@ -133,7 +140,9 @@
   justify-content: center;
 }
 
-.sc-player__btn--play:hover { background: var(--scp-accent-hover) !important; }
+.sc-player__btn--play:hover {
+  background: var(--scp-accent-hover) !important;
+}
 
 .sc-player__select {
   background: rgba(38, 38, 38, 0.1);
@@ -180,7 +189,9 @@
   white-space: nowrap;
 }
 
-.sc-player__tracks-btn:hover { color: var(--scp-text); }
+.sc-player__tracks-btn:hover {
+  color: var(--scp-text);
+}
 
 /* ── Track List Dropdown ───────────────────────────────────────── */
 .sc-player__tracks {
@@ -219,8 +230,13 @@
   font-family: var(--scp-font);
 }
 
-.sc-player__track:hover { background: rgba(0, 0, 0, 0.05); }
-.sc-player__track.active { background: var(--scp-active-bg); }
+.sc-player__track:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sc-player__track.active {
+  background: var(--scp-active-bg);
+}
 
 .sc-player__track-num {
   color: var(--scp-muted);
@@ -248,8 +264,15 @@
 }
 
 @keyframes scp-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ── Responsive ────────────────────────────────────────────────── */
@@ -259,14 +282,22 @@
     height: 56px;
     gap: 8px;
   }
-  .sc-player__progress { display: none; }
-  .sc-player__select { max-width: 80px; }
+
+  .sc-player__progress {
+    display: none;
+  }
+
+  .sc-player__select {
+    max-width: 80px;
+  }
+
   .sc-player__tracks {
     width: 100%;
     right: 0;
     left: 0;
     border-radius: 0;
   }
+
   .sc-player__tracks--open {
     width: 100%;
     left: 0;

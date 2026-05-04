@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SC-Player Shell</title>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SC-Player Shell — Drop-in persistent audio player
+       ═══════════════════════════════════════════════════════════════════
+
+       HOW TO USE:
+       1. Edit the PLAYER_CONFIG object below with your data
+       2. Change the content iframe src to your website
+       3. Upload this file, sc-player-standalone.js, and playlists.js
+       4. Done — users see your site with a persistent player bar
+  ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- SoundCloud Widget API — required for the player -->
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+
+  <!-- Playlist Data -->
+  <script src="playlists.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PLAYER CONFIG — Customize the player behavior and look
+       ═══════════════════════════════════════════════════════════════════ -->
+  <script>
+    window.PLAYER_CONFIG = {
+      /* ─── Theme: Customize colors and dimensions ─── */
+      theme: {
+        bg: '#111316',              // Player bar background
+        border: '#333842',          // Border / divider color
+        text: '#ffffffff',          // Primary text (title)
+        muted: '#ffffffde',           // Secondary text (artist, duration)
+        accent: '#1a1a1a',          // Play button, progress bar, active state
+        accentHover: '#fffffdde',     // Play button hover color
+        activeBg: '#1a1a24',        // Active track highlight
+        listBg: '#111316',          // Track list panel background
+        barHeight: '64px',          // Height of the player bar
+        borderRadius: '4px',        // Artwork corner radius
+        fontFamily: 'Inter, system-ui, sans-serif',
+      },
+
+      /* ─── Feature toggles ─── */
+      showPlaylistSelect: true,     // Show playlist selector dropdown
+      showTrackList: true,          // Show track list toggle button
+      showProgress: true,           // Show progress/seek bar
+      showNavButtons: true,         // Show prev / play / next buttons
+      autoplayOnSelect: true,       // Auto-play when clicking a track
+      autoplayDelay: 500,           // ms delay before auto-playing
+      position: 'bottom',           // Player bar position: 'bottom' or 'top'
+
+      /* ─── Data source ─── */
+      defaultPlaylist: '2024',
+      playlists: window.PLAYER_PLAYLISTS,
+
+      /* ─── SoundCloud embed URL ───
+           This hidden iframe loads the initial SoundCloud widget.
+           Replace with your own playlist embed URL if needed.
+      */
+      scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1839382410&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true'
+    }
+  </script>
+
+  <!-- ═══ Page styles — replace with your own site styles ═══ -->
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #content {
+      width: 100%;
+      height: calc(100vh - var(--bar-h, 64px));
+      border: none;
+      display: block;
+    }
+
+    /* Body padding so content isn't hidden behind the player bar */
+    body {
+      --bar-h: 64px;
+      /* matches theme.barHeight */
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ═══ Content iframe — your actual website ═══
+       Change src to point to your website.
+       Navigation inside this frame will NOT reload the player. -->
+  <iframe id="content" src="about:blank" title="Main content" loading="lazy"></iframe>
+
+  <!-- Player mounts here automatically -->
+  <script src="sc-player-standalone.js"></script>
+</body>
+
+</html>

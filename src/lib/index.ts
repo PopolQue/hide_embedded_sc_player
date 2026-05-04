@@ -15,6 +15,7 @@
  */
 
 export { default } from './SCPlayer'
+export { PLAYLISTS } from './data'
 export type {
   Track,
   Playlist,
