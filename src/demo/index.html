@@ -1,36 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SCPlayer Demo</title>
   <script src="https://w.soundcloud.com/player/api.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
       height: 100%;
       background: #111;
       color: #eee;
       font-family: Inter, system-ui, -apple-system, sans-serif;
     }
+
     body {
       padding-bottom: 80px;
     }
+
     .demo-content {
       max-width: 720px;
       margin: 0 auto;
       padding: 48px 24px;
     }
+
     .demo-content h1 {
       font-size: 32px;
       font-weight: 700;
       margin-bottom: 8px;
     }
+
     .demo-content p {
       color: #9ca3af;
       line-height: 1.6;
       margin-bottom: 16px;
     }
+
     .demo-badge {
       display: inline-block;
       background: #000000;
@@ -43,45 +55,53 @@
       letter-spacing: 0.5px;
       margin-bottom: 16px;
     }
+
     .demo-features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 12px;
       margin-top: 24px;
     }
+
     .demo-feature {
       background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 8px;
       padding: 16px;
     }
+
     .demo-feature h3 {
       font-size: 14px;
       color: #7b7b7b;
       margin-bottom: 4px;
     }
+
     .demo-feature p {
       font-size: 13px;
       color: #d6d4d4;
       margin: 0;
     }
+
     .demo-links {
       margin-top: 32px;
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
     }
+
     .demo-links a {
       color: #808080;
       text-decoration: none;
       font-size: 14px;
     }
+
     .demo-links a:hover {
       text-decoration: underline;
     }
   </style>
   <script type="module" src="/src/demo/main.tsx"></script>
 </head>
+
 <body>
   <div class="demo-content">
     <div class="demo-badge">Demo</div>
@@ -112,10 +132,11 @@
     </div>
 
     <div class="demo-links">
-      <a href="https://github.com/PopolQue/hide_embedded_sc_player">GitHub Repo</a>
+      <a href="https://github.com/PopolQue/hide_embedded_sc_player" target="_blank">GitHub Repo</a>
     </div>
   </div>
 
   <div id="root"></div>
 </body>
+
 </html>

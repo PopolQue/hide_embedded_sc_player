@@ -1,12 +1,12 @@
 // ── SoundCloud Widget API types ──────────────────────────────────────
 
 /** SoundCloud user metadata from Widget API */
-export interface SCUser {
+export type SCUser = {
   username: string
 }
 
 /** SoundCloud sound object from Widget API */
-export interface SCSound {
+export type SCSound = {
   id: number
   title: string
   user: SCUser
@@ -16,7 +16,7 @@ export interface SCSound {
 }
 
 /** Events emitted by the SoundCloud Widget */
-export interface SCWidgetEvents {
+export type SCWidgetEvents = {
   READY: string
   PLAY: string
   PAUSE: string
@@ -27,7 +27,7 @@ export interface SCWidgetEvents {
 }
 
 /** SoundCloud Widget constructor and API */
-export interface SCWidget {
+export type SCWidget = {
   bind(event: string, callback: (data?: unknown) => void): void
   unbind(event?: string): void
   play(): void
@@ -49,7 +49,7 @@ export interface SCWidget {
 }
 
 /** SoundCloud Widget API on window */
-export interface SoundCloudAPI {
+export type SoundCloudAPI = {
   Widget: {
     new (element: HTMLIFrameElement): SCWidget
     Events: SCWidgetEvents
@@ -65,7 +65,7 @@ declare global {
 // ── Player domain types ──────────────────────────────────────────────
 
 /** A single track in a playlist */
-export interface Track {
+export type Track = {
   /** Unique SoundCloud track ID */
   id: number
   /** Display title (e.g. "Artist - Track Title") */
@@ -81,7 +81,7 @@ export interface Track {
 }
 
 /** A collection of tracks (e.g. a year's releases) */
-export interface Playlist {
+export type Playlist = {
   /** Display name shown in the playlist selector */
   label: string
   /** SoundCloud playlist ID (e.g. "soundcloud:playlists:123456") */
@@ -93,7 +93,7 @@ export interface Playlist {
 }
 
 /** Theme configuration for customizing the player appearance */
-export interface ThemeConfig {
+export type ThemeConfig = {
   /** Player bar background color. Default: `#1a1a24` */
   bg?: string
   /** Border color. Default: `#333842` */
@@ -119,13 +119,15 @@ export interface ThemeConfig {
 }
 
 /** Core player configuration (shared between React and standalone) */
-export interface PlayerConfig {
+export type PlayerConfig = {
   /** Available playlists keyed by identifier */
   playlists: Record<string, Playlist>
   /** Initial playlist to load. Defaults to first key. */
   defaultPlaylist?: string
   /** SoundCloud iframe embed URL for the hidden widget */
   scEmbedUrl: string
+  /** URL to the SoundCloud account. Default: `https://soundcloud.com` */
+  scAccountUrl?: string
   /** Player bar position. Default: `'bottom'` */
   position?: 'bottom' | 'top'
   /** Show playlist/playlist selector. Default: `true` */
@@ -143,7 +145,7 @@ export interface PlayerConfig {
 }
 
 /** React component props — extends PlayerConfig with theme and className */
-export interface SCPlayerProps extends PlayerConfig {
+export type SCPlayerProps = PlayerConfig & {
   /** Theme overrides (partial). CSS custom properties take precedence. */
   theme?: ThemeConfig
   /** Additional CSS class applied to the root element */

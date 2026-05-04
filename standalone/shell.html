@@ -13,7 +13,7 @@
        HOW TO USE:
        1. Edit the PLAYER_CONFIG object below with your data
        2. Change the content iframe src to your website
-       3. Upload this file, sc-player-standalone.js, and playlists.js
+       3. Upload this file, sc-player-standalone.js, sc-player.css, playlists.js, and the assets/ folder
        4. Done — users see your site with a persistent player bar
   ═══════════════════════════════════════════════════════════════════ -->
 
@@ -22,6 +22,9 @@
 
   <!-- Playlist Data -->
   <script src="playlists.js"></script>
+
+  <!-- Player Styles -->
+  <link rel="stylesheet" href="sc-player.css">
 
   <!-- ═══════════════════════════════════════════════════════════════════
        PLAYER CONFIG — Customize the player behavior and look
@@ -55,6 +58,7 @@
       /* ─── Data source ─── */
       defaultPlaylist: '2024',
       playlists: window.PLAYER_PLAYLISTS,
+      scAccountUrl: 'https://soundcloud.com/kleinundhaarig',
 
       /* ─── SoundCloud embed URL ───
            This hidden iframe loads the initial SoundCloud widget.
@@ -84,6 +88,25 @@
     body {
       --bar-h: 64px;
       /* matches theme.barHeight */
+    }
+
+    /* SoundCloud Logo styles */
+    .sc-player__logo {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+      height: 24px;
+    }
+
+    .sc-player__logo:hover {
+      opacity: 0.8;
+    }
+
+    .sc-player__logo img {
+      height: 100%;
+      width: auto;
+      display: block;
     }
   </style>
 </head>

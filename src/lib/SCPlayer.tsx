@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import type { SCPlayerProps, SCWidget, SCWidgetEvents } from './types'
+import scLogo from './assets/sc-logo.png'
 import './SCPlayer.css'
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -88,6 +89,7 @@ export default function SCPlayer({
   playlists,
   defaultPlaylist,
   scEmbedUrl,
+  scAccountUrl = 'https://soundcloud.com/kleinundhaarig',
   position = 'bottom',
   showPlaylistSelect = true,
   showTrackList = true,
@@ -360,8 +362,8 @@ export default function SCPlayer({
                   // Fallback to placeholder if image fails
                   const target = e.currentTarget
                   target.style.display = 'none'
-                  const placeholder = target.nextElementSibling as HTMLElement | null
-                  if (placeholder) placeholder.style.display = 'flex'
+                  const placeholder = target.nextElementSibling
+                  if (placeholder instanceof HTMLElement) placeholder.style.display = 'flex'
                 }}
               />
             ) : null}
@@ -476,6 +478,17 @@ export default function SCPlayer({
             <span className="sc-player__tracks-count">{allTracks.length}</span>
           </button>
         )}
+
+        {/* SoundCloud Logo */}
+        <a
+          href={scAccountUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sc-player__logo"
+          aria-label="Visit our SoundCloud"
+        >
+          <img src={scLogo} alt="SoundCloud" />
+        </a>
       </div>
 
       {/* Track List Panel */}

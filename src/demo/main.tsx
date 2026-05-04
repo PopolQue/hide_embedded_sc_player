@@ -3,8 +3,12 @@ import { createRoot } from 'react-dom/client'
 import DemoApp from './DemoApp'
 import '../lib/SCPlayer.css'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <DemoApp />
-  </StrictMode>
-)
+const rootElement = document.getElementById('root')
+
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <DemoApp />
+    </StrictMode>
+  )
+}

@@ -44,6 +44,7 @@ function App() {
       playlists={PLAYLISTS}
       defaultPlaylist="2025"
       scEmbedUrl="https://w.soundcloud.com/player/?url=..."
+      scAccountUrl="https://soundcloud.com/kleinundhaarig"
     />
   )
 }

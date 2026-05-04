@@ -146,6 +146,11 @@
             '</button>'
           ) : '') +
 
+          // SoundCloud Logo
+          '<a href="' + escapeHtml(cfg.scAccountUrl || 'https://soundcloud.com/kleinundhaarig') + '" target="_blank" rel="noopener noreferrer" class="sc-player__logo" aria-label="Visit our SoundCloud">' +
+            '<img src="assets/sc-logo.png" alt="SoundCloud" />' +
+          '</a>' +
+
         '</div>' +
 
         // Track list panel
