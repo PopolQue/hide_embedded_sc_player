@@ -353,31 +353,55 @@ export default function SCPlayer({
         {/* Track Info */}
         <div className="sc-player__info">
           <div className="sc-player__artwork">
-            {artworkUrl ? (
-              <img
-                src={artworkUrl}
-                alt=""
-                loading="lazy"
-                onError={(e) => {
-                  // Fallback to placeholder if image fails
-                  const target = e.currentTarget
-                  target.style.display = 'none'
-                  const placeholder = target.nextElementSibling
-                  if (placeholder instanceof HTMLElement) placeholder.style.display = 'flex'
-                }}
-              />
-            ) : null}
-            <div
-              className="sc-player__artwork-placeholder"
-              style={artworkUrl ? { display: 'none' } : undefined}
-            >
-              <IconMusic />
-            </div>
+            {currentTrack ? (
+              <a
+                href={currentTrack.permalink_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View on SoundCloud"
+              >
+                {artworkUrl ? (
+                  <img
+                    src={artworkUrl}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      // Fallback to placeholder if image fails
+                      const target = e.currentTarget
+                      target.style.display = 'none'
+                      const placeholder = target.nextElementSibling
+                      if (placeholder instanceof HTMLElement)
+                        placeholder.style.display = 'flex'
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="sc-player__artwork-placeholder"
+                  style={artworkUrl ? { display: 'none' } : undefined}
+                >
+                  <IconMusic />
+                </div>
+              </a>
+            ) : (
+              <div className="sc-player__artwork-placeholder">
+                <IconMusic />
+              </div>
+            )}
           </div>
           <div className="sc-player__text">
-            <div className="sc-player__title">
-              {currentTrack?.title ?? 'No track selected'}
-            </div>
+            {currentTrack ? (
+              <a
+                href={currentTrack.permalink_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sc-player__title"
+                title="View on SoundCloud"
+              >
+                {currentTrack.title}
+              </a>
+            ) : (
+              <div className="sc-player__title">No track selected</div>
+            )}
             <div className="sc-player__artist">
               {currentTrack?.artist ?? ''}
             </div>
