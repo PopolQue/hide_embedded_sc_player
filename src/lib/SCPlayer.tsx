@@ -344,7 +344,14 @@ export default function SCPlayer({
       {/* Error state */}
       {widgetError && (
         <div className="sc-player__error" role="alert">
-          SoundCloud player unavailable. Please reload the page.
+          <span>SoundCloud player unavailable. Please reload the page.</span>
+          <button
+            className="sc-player__error-close"
+            onClick={() => setWidgetError(false)}
+            aria-label="Close error message"
+          >
+            <IconClose />
+          </button>
         </div>
       )}
 

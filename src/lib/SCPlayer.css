@@ -373,10 +373,33 @@ a.sc-player__title:hover {
   transform: translateX(-50%);
   background: #271212;
   color: #fff;
-  padding: 8px 16px;
+  padding: 8px 12px 8px 16px;
   border-radius: var(--scp-radius);
   font-size: 13px;
   z-index: 10000;
   max-width: 90vw;
   text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sc-player__error-close {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s, background 0.2s;
+  border-radius: 50%;
+}
+
+.sc-player__error-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
 }
