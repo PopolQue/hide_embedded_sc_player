@@ -119,7 +119,7 @@
 .sc-player__btn {
   background: none;
   border: none;
-  color: var(--scp-accent);
+  color: var(--scp-text);
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 50%;
