@@ -60,7 +60,7 @@ window.PLAYER_PLAYLISTS =
   },
   "2023": {
     "label": "KUH23",
-    "playlistId": "soundcloud:playlists:1839382410",
+    "playlistId": "soundcloud:playlists:1687133382",
     "url": "https://soundcloud.com/kleinundhaarig/sets/kuh2024",
     "tracks": [
       { "id": 1579348427, "title": "76666", "artist": "KuH 2023", "duration": 21480000, "artwork_url": "https://i1.sndcdn.com/artworks-bGPDzghv4k5VzbA5-OlCk5w-t1080x1080.jpg", "permalink_url": "https://soundcloud.com/kleinundhaarig/76666-kuh-2023" },
