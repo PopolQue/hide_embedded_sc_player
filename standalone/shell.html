@@ -12,7 +12,7 @@
 
        HOW TO USE:
        1. Edit the PLAYER_CONFIG object below with your data
-       2. Change the content iframe src to your website
+       2. Change the initialContentUrl to your website's homepage
        3. Upload this file, sc-player-standalone.js, sc-player.css, playlists.js, and the assets/ folder
        4. Done — users see your site with a persistent player bar
   ═══════════════════════════════════════════════════════════════════ -->
@@ -56,69 +56,109 @@
       position: 'bottom',           // Player bar position: 'bottom' or 'top'
 
       /* ─── Data source ─── */
-      defaultPlaylist: '2024',
+      defaultPlaylist: '2025',
       playlists: window.PLAYER_PLAYLISTS,
       scAccountUrl: 'https://soundcloud.com/kleinundhaarig',
 
-      /* ─── SoundCloud embed URL ───
-           This hidden iframe loads the initial SoundCloud widget.
-           Replace with your own playlist embed URL if needed.
-      */
-      scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1839382410&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true'
+      /* ─── SoundCloud embed URL ─── */
+      scEmbedUrl: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2158762997&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true',
+      
+      /* ─── Shell Content Settings ─── */
+      initialContentUrl: 'about:blank', // YOUR WEBSITE URL HERE
+      syncUrl: true                      // Enable browser URL syncing
     }
   </script>
 
-  <!-- ═══ Page styles — replace with your own site styles ═══ -->
   <style>
     html,
     body {
       height: 100%;
       margin: 0;
       overflow: hidden;
+      background: #000;
     }
 
     #content {
       width: 100%;
-      height: calc(100vh - var(--bar-h, 64px));
+      height: 100%;
       border: none;
       display: block;
+      transition: height 0.2s ease;
     }
 
-    /* Body padding so content isn't hidden behind the player bar */
-    body {
-      --bar-h: 64px;
-      /* matches theme.barHeight */
-    }
-
-    /* SoundCloud Logo styles */
-    .sc-player__logo {
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-      transition: opacity 0.2s;
-      height: 24px;
-    }
-
-    .sc-player__logo:hover {
-      opacity: 0.8;
-    }
-
-    .sc-player__logo img {
-      height: 100%;
-      width: auto;
-      display: block;
-    }
+    /* Dynamic spacing based on bar height and position */
+    body.scp-pos-bottom { padding-bottom: var(--scp-bar-h, 64px); }
+    body.scp-pos-top { padding-top: var(--scp-bar-h, 64px); }
+    
+    body.scp-pos-bottom #content { height: calc(100vh - var(--scp-bar-h, 64px)); }
+    body.scp-pos-top #content { height: calc(100vh - var(--scp-bar-h, 64px)); }
   </style>
 </head>
 
-<body>
-  <!-- ═══ Content iframe — your actual website ═══
-       Change src to point to your website.
-       Navigation inside this frame will NOT reload the player. -->
-  <iframe id="content" src="about:blank" title="Main content" loading="lazy"></iframe>
+<body class="scp-pos-bottom">
+  <!-- ═══ Content iframe — your actual website ═══ -->
+  <iframe id="content" name="content" title="Main content" loading="lazy"></iframe>
 
   <!-- Player mounts here automatically -->
   <script src="sc-player-standalone.js"></script>
+
+  <!-- Shell Logic: Theme Sync & URL Persistence -->
+  <script>
+    ;(function() {
+      var cfg = window.PLAYER_CONFIG || {};
+      var theme = cfg.theme || {};
+      var iframe = document.getElementById('content');
+      var barH = theme.barHeight || '64px';
+      var pos = cfg.position || 'bottom';
+
+      // 1. Apply theme-aware layout
+      document.body.style.setProperty('--scp-bar-h', barH);
+      document.body.className = 'scp-pos-' + pos;
+
+      // 2. URL Syncing / Deep Linking
+      if (cfg.syncUrl !== false) {
+        var isInitialLoad = true;
+        
+        // Handle initial load: check if we have a sub-page in the hash
+        var hash = window.location.hash.substring(1);
+        var targetUrl = hash ? decodeURIComponent(hash) : cfg.initialContentUrl;
+        
+        iframe.src = targetUrl;
+
+        // Update browser URL when iframe navigates
+        iframe.addEventListener('load', function() {
+          if (isInitialLoad) {
+            isInitialLoad = false;
+            return;
+          }
+          try {
+            var currentPath = iframe.contentWindow.location.href;
+            // Only sync if it's the same origin to avoid security errors
+            if (currentPath.indexOf(window.location.origin) === 0) {
+              var relativePath = currentPath.replace(window.location.origin, '');
+              window.history.replaceState(null, '', '#' + encodeURIComponent(relativePath));
+            }
+          } catch (e) {
+            // Cross-origin iframe navigation - we can't read the URL for security
+            console.warn('SC-Player: Cannot sync URL for cross-origin navigation.');
+          }
+        });
+
+        // Handle browser back/forward: update iframe if hash changes
+        window.addEventListener('hashchange', function() {
+          var newHash = window.location.hash.substring(1);
+          if (newHash) {
+            var newUrl = decodeURIComponent(newHash);
+            if (iframe.contentWindow.location.href !== newUrl) {
+              iframe.src = newUrl;
+            }
+          }
+        });
+      } else {
+        iframe.src = cfg.initialContentUrl;
+      }
+    })();
+  </script>
 </body>
 
 </html>

@@ -142,6 +142,10 @@ export type PlayerConfig = {
   autoplayOnSelect?: boolean
   /** Delay before auto-playing after track selection (ms). Default: `500` */
   autoplayDelay?: number
+  /** Enable state persistence (playlist, track, progress). Default: `true` */
+  persist?: boolean
+  /** Custom localStorage key. Default: `scp-state` */
+  storageKey?: string
 }
 
 /** React component props — extends PlayerConfig with theme and className */

@@ -7,7 +7,7 @@
 
    See shell.html for a complete configuration template.
 
-   Version: 1.0.0
+   Version: 1.1.0
    License: MIT
    ──────────────────────────────────────────────────────────────────── */
 ;(function () {
@@ -18,26 +18,52 @@
   var theme = cfg.theme || {}
   var playlists = cfg.playlists || {}
   var playlistKeys = Object.keys(playlists)
-  var defaultKey = cfg.defaultPlaylist || (playlistKeys.length ? playlistKeys[0] : '')
+  var storageKey = cfg.storageKey || 'scp-state'
+  var persist = cfg.persist !== false
+
+  // Load state from localStorage
+  var savedState = null
+  if (persist) {
+    try {
+      var saved = localStorage.getItem(storageKey)
+      if (saved) savedState = JSON.parse(saved)
+    } catch (e) {}
+  }
+
+  var defaultKey = (savedState && savedState.playlist && playlists[savedState.playlist])
+    ? savedState.playlist
+    : (cfg.defaultPlaylist || (playlistKeys.length ? playlistKeys[0] : ''))
+
   var allTracks = (playlists[defaultKey] && playlists[defaultKey].tracks) || []
-  var currentIdx = 0
+  var currentIdx = (savedState && savedState.index < allTracks.length) ? savedState.index : 0
+  var currentPos = (savedState && savedState.progress) ? savedState.progress : 0
+
   var isPlaying = false
-  var currentDur = 0
-  var currentPos = 0
+  var currentDur = (allTracks[currentIdx] && allTracks[currentIdx].duration) || 0
   var widget = null
   var widgetReady = false
   var progressTimer = null
 
+  /* ── Icons (SVG) ────────────────────────────────────────────────── */
+  var ICONS = {
+    play: '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
+    prev: '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>',
+    next: '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>',
+    music: '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'
+  }
+
   /* ── CSS Custom Properties ──────────────────────────────────────── */
   var cssVars = [
     '--scp-bg:' + (theme.bg || '#1a1a24'),
-    '--scp-border:' + (theme.border || '#111316'),
-    '--scp-text:' + (theme.text || '#ffffffde'),
-    '--scp-muted:' + (theme.muted || '#ffffff'),
+    '--scp-border:' + (theme.border || '#333842'),
+    '--scp-text:' + (theme.text || '#d1d1d1de'),
+    '--scp-muted:' + (theme.muted || '#9ca3af'),
     '--scp-accent:' + (theme.accent || '#1a1a1a'),
     '--scp-accent-hover:' + (theme.accentHover || '#000000'),
-    '--scp-active-bg:' + (theme.activeBg || 'rgba(12, 12, 12, 0.72)'),
-    '--scp-list-bg:' + (theme.listBg || '#242430'),
+    '--scp-active-bg:' + (theme.activeBg || 'rgba(62, 62, 62, 0.15)'),
+    '--scp-list-bg:' + (theme.listBg || '#0c0c0c'),
     '--scp-bar-h:' + (theme.barHeight || '64px'),
     '--scp-radius:' + (theme.borderRadius || '4px'),
     '--scp-font:' + (theme.fontFamily || 'Inter,system-ui,sans-serif'),
@@ -76,13 +102,13 @@
   /* ── Render ─────────────────────────────────────────────────────── */
   function render() {
     var t = allTracks[currentIdx] || {}
+    var pl = playlists[defaultKey] || {}
     var pct = currentDur > 0 ? Math.round((currentPos / currentDur) * 100) : 0
     var showNav = cfg.showNavButtons !== false
     var showSel = cfg.showPlaylistSelect !== false && playlistKeys.length > 1
     var showProg = cfg.showProgress !== false
     var showTrk = cfg.showTrackList !== false
 
-    // Resolve artwork
     var artUrl = resolveArtwork(t.artwork_url)
 
     var el = document.getElementById('sc-player-root')
@@ -93,34 +119,40 @@
     }
 
     el.innerHTML =
-      '<div class="sc-player sc-player--' + position + '" style="' + cssVars + '">' +
-
-        // Hidden SoundCloud iframe
+      '<div class="sc-player sc-player--' + position + '" style="' + cssVars + '" role="region" aria-label="SoundCloud Player">' +
         '<iframe id="sc-widget" class="sc-player__iframe" src="' + escapeHtml(cfg.scEmbedUrl || '') + '" allow="autoplay" title="SoundCloud Player" tabindex="-1"></iframe>' +
+        '<div id="scp-error-container"></div>' +
 
-        // Player bar
         '<div class="sc-player__bar">' +
-
-          // Track info
           '<div class="sc-player__info">' +
             '<div class="sc-player__artwork">' +
-              (artUrl
-                ? '<img src="' + escapeHtml(artUrl) + '" alt="" />'
-                : '<div class="sc-player__artwork-placeholder">♪</div>'
+              (t.permalink_url 
+                ? '<a href="' + escapeHtml(t.permalink_url) + '" target="_blank" rel="noopener noreferrer" title="View on SoundCloud">' +
+                    (artUrl ? '<img src="' + escapeHtml(artUrl) + '" alt="" loading="lazy" />' : '') +
+                    '<div class="sc-player__artwork-placeholder" style="' + (artUrl ? 'display:none' : '') + '">' + ICONS.music + '</div>' +
+                  '</a>'
+                : '<div class="sc-player__artwork-placeholder">' + ICONS.music + '</div>'
               ) +
             '</div>' +
             '<div class="sc-player__text">' +
-              '<div class="sc-player__title">' + escapeHtml(t.title || 'No track selected') + '</div>' +
-              '<div class="sc-player__artist">' + escapeHtml(t.artist || '') + '</div>' +
+              (t.permalink_url
+                ? '<a href="' + escapeHtml(t.permalink_url) + '" target="_blank" rel="noopener noreferrer" class="sc-player__title" title="View on SoundCloud">' + escapeHtml(t.title || 'No track selected') + '</a>'
+                : '<div class="sc-player__title">' + escapeHtml(t.title || 'No track selected') + '</div>'
+              ) +
+              '<div class="sc-player__artist">' +
+                (pl.url 
+                  ? '<a href="' + escapeHtml(pl.url) + '" target="_blank" rel="noopener noreferrer" title="View ' + escapeHtml(pl.label) + ' on SoundCloud">' + escapeHtml(t.artist || '') + '</a>'
+                  : escapeHtml(t.artist || '')
+                ) +
+              '</div>' +
             '</div>' +
           '</div>' +
 
-          // Controls
           '<div class="sc-player__controls">' +
             (showNav ? (
-              '<button class="sc-player__btn sc-player__btn--prev" id="scp-prev" aria-label="Previous track"' + (!allTracks.length ? ' disabled' : '') + '>\u2039\u2039</button>' +
-              '<button class="sc-player__btn sc-player__btn--play" id="scp-play" aria-label="' + (isPlaying ? 'Pause' : 'Play') + '"' + (!widgetReady || !allTracks.length ? ' disabled' : '') + '>' + (isPlaying ? '\u275A\u275A' : '\u25B6') + '</button>' +
-              '<button class="sc-player__btn sc-player__btn--next" id="scp-next" aria-label="Next track"' + (!allTracks.length ? ' disabled' : '') + '>\u203A\u203A</button>'
+              '<button class="sc-player__btn sc-player__btn--prev" id="scp-prev" aria-label="Previous track"' + (!allTracks.length ? ' disabled' : '') + '>' + ICONS.prev + '</button>' +
+              '<button class="sc-player__btn sc-player__btn--play" id="scp-play" aria-label="' + (isPlaying ? 'Pause' : 'Play') + '"' + (!widgetReady || !allTracks.length ? ' disabled' : '') + '>' + (isPlaying ? ICONS.pause : ICONS.play) + '</button>' +
+              '<button class="sc-player__btn sc-player__btn--next" id="scp-next" aria-label="Next track"' + (!allTracks.length ? ' disabled' : '') + '>' + ICONS.next + '</button>'
             ) : '') +
             (showSel ? (
               '<select class="sc-player__select" id="scp-sel" aria-label="Select playlist">' +
@@ -131,43 +163,38 @@
             ) : '') +
           '</div>' +
 
-          // Progress bar
           (showProg ? (
             '<div class="sc-player__progress" id="scp-prog" role="slider" aria-label="Playback progress" aria-valuenow="' + Math.round(currentPos) + '" aria-valuemin="0" aria-valuemax="' + Math.max(currentDur, 1) + '" tabindex="0">' +
-              '<div class="sc-player__progress-fill" style="width:' + pct + '%"></div>' +
+              '<div class="sc-player__progress-fill" style="width:' + pct + '%" aria-hidden="true"></div>' +
+              '<span class="sc-player__sr-only" id="scp-prog-text">' + formatTime(currentPos) + ' of ' + formatTime(currentDur) + '</span>' +
             '</div>'
           ) : '') +
 
-          // Track list toggle
           (showTrk && allTracks.length > 0 ? (
-            '<button class="sc-player__tracks-btn" id="scp-trk" aria-label="Toggle track list" aria-expanded="false">' +
-              '<span class="sc-player__tracks-btn-icon">\u2630</span>' +
+            '<button class="sc-player__tracks-btn" id="scp-trk" aria-label="Toggle track list" aria-expanded="false" aria-controls="scp-list">' +
+              '<span class="sc-player__tracks-btn-icon" aria-hidden="true">☰</span>' +
               '<span class="sc-player__tracks-count">' + allTracks.length + '</span>' +
             '</button>'
           ) : '') +
 
-          // SoundCloud Logo
           '<a href="' + escapeHtml(cfg.scAccountUrl || 'https://soundcloud.com/kleinundhaarig') + '" target="_blank" rel="noopener noreferrer" class="sc-player__logo" aria-label="Visit our SoundCloud">' +
             '<img src="assets/sc-logo.png" alt="SoundCloud" />' +
           '</a>' +
-
         '</div>' +
 
-        // Track list panel
         (showTrk ? (
           '<div class="sc-player__tracks" id="scp-list" role="list" aria-label="Track list">' +
             allTracks.map(function(tr, i) {
               var active = i === currentIdx
               return '<button class="sc-player__track' + (active ? ' active' : '') + '" data-i="' + i + '" role="listitem"' + (active && isPlaying ? ' aria-current="true"' : '') + '>' +
-                '<span class="sc-player__track-num">' + (i + 1) + '</span>' +
+                '<span class="sc-player__track-num" aria-hidden="true">' + (i + 1) + '</span>' +
                 '<span class="sc-player__track-title">' + escapeHtml(tr.title) + '</span>' +
                 '<span class="sc-player__track-dur">' + formatTime(tr.duration) + '</span>' +
-                (active && isPlaying ? '<span class="sc-player__playing" aria-label="Currently playing">\u266B</span>' : '') +
+                (active && isPlaying ? '<span class="sc-player__playing" aria-label="Currently playing">♫</span>' : '') +
               '</button>'
             }).join('') +
           '</div>'
         ) : '') +
-
       '</div>'
 
     bindEvents()
@@ -194,6 +221,14 @@
 
     widget.bind(Events.READY, function () {
       widgetReady = true
+
+      if (savedState && allTracks[currentIdx] && allTracks[currentIdx].permalink_url) {
+        widget.load(allTracks[currentIdx].permalink_url, { autoPlay: false })
+        if (currentPos > 0) {
+          widget.seekTo(currentPos)
+        }
+      }
+
       widget.isPaused(function (p) {
         isPlaying = !p
         updatePlayButton()
@@ -214,8 +249,21 @@
       widget.getCurrentSound(function (s) {
         if (s) {
           var i = findTrackIndex(s.id)
-          if (i >= 0) currentIdx = i
-          widget.getDuration(function (d) { currentDur = d })
+          if (i >= 0) {
+            currentIdx = i
+            // Refresh list to show active track correctly
+            var list = document.getElementById('scp-list')
+            if (list) {
+              var tracks = list.querySelectorAll('.sc-player__track')
+              for (var j = 0; j < tracks.length; j++) {
+                tracks[j].classList.toggle('active', j === i)
+              }
+            }
+          }
+          widget.getDuration(function (d) { 
+            currentDur = d 
+            updateProgress()
+          })
           updatePlayButton()
         }
       })
@@ -225,25 +273,43 @@
       renderError('SoundCloud widget encountered an error.')
     })
 
-    // Progress polling
-    progressTimer = setInterval(function () {
-      if (widget && widgetReady) {
-        widget.getPosition(function (p) {
-          currentPos = p
-          var fill = document.querySelector('.sc-player__progress-fill')
-          if (fill) {
-            fill.style.width = (currentDur > 0 ? (currentPos / currentDur) * 100 : 0) + '%'
-          }
-          var prog = document.getElementById('scp-prog')
-          if (prog) {
-            prog.setAttribute('aria-valuenow', Math.round(p))
-          }
-        })
-      }
-    }, 500)
+    progressTimer = setInterval(updateProgress, 500)
   }
 
-  /* ── Find track index by SoundCloud ID ──────────────────────────── */
+  function updateProgress() {
+    if (widget && widgetReady) {
+      widget.getPosition(function (p) {
+        currentPos = p
+        saveState()
+        var fill = document.querySelector('.sc-player__progress-fill')
+        if (fill) {
+          fill.style.width = (currentDur > 0 ? (currentPos / currentDur) * 100 : 0) + '%'
+        }
+        var prog = document.getElementById('scp-prog')
+        if (prog) {
+          prog.setAttribute('aria-valuenow', Math.round(p))
+          prog.setAttribute('aria-valuemax', Math.max(currentDur, 1))
+        }
+        var progText = document.getElementById('scp-prog-text')
+        if (progText) {
+          progText.textContent = formatTime(currentPos) + ' of ' + formatTime(currentDur)
+        }
+      })
+    }
+  }
+
+  /* ── Save state ─────────────────────────────────────────────────── */
+  function saveState() {
+    if (!persist) return
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({
+        playlist: defaultKey,
+        index: currentIdx,
+        progress: currentPos
+      }))
+    } catch (e) {}
+  }
+
   function findTrackIndex(id) {
     for (var i = 0; i < allTracks.length; i++) {
       if (allTracks[i].id === id) return i
@@ -251,14 +317,12 @@
     return -1
   }
 
-  /* ── Update just the play button text (avoid full re-render) ────── */
   function updatePlayButton() {
     var btn = document.getElementById('scp-play')
     if (btn) {
-      btn.textContent = isPlaying ? '\u275A\u275A' : '\u25B6'
+      btn.innerHTML = isPlaying ? ICONS.pause : ICONS.play
       btn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play')
     }
-    // Update playing indicators in track list
     var tracks = document.querySelectorAll('.sc-player__track')
     for (var i = 0; i < tracks.length; i++) {
       var idx = parseInt(tracks[i].getAttribute('data-i'), 10)
@@ -267,7 +331,7 @@
         var span = document.createElement('span')
         span.className = 'sc-player__playing'
         span.setAttribute('aria-label', 'Currently playing')
-        span.textContent = '\u266B'
+        span.textContent = '♫'
         tracks[i].appendChild(span)
       } else if ((idx !== currentIdx || !isPlaying) && playing) {
         playing.parentNode.removeChild(playing)
@@ -275,17 +339,18 @@
     }
   }
 
-  /* ── Render error state ─────────────────────────────────────────── */
   function renderError(msg) {
-    var el = document.getElementById('sc-player-root')
-    if (!el) return
-    var bar = el.querySelector('.sc-player__bar')
-    if (bar) {
-      var err = document.createElement('div')
-      err.className = 'sc-player__error'
-      err.setAttribute('role', 'alert')
-      err.textContent = msg || 'Player unavailable.'
-      bar.parentNode.insertBefore(err, bar.nextSibling)
+    var container = document.getElementById('scp-error-container')
+    if (!container) return
+    container.innerHTML = 
+      '<div class="sc-player__error" role="alert">' +
+        '<span>' + escapeHtml(msg || 'Player unavailable.') + '</span>' +
+        '<button class="sc-player__error-close" id="scp-err-close" aria-label="Close error message">' + ICONS.close + '</button>' +
+      '</div>'
+    
+    var closeBtn = document.getElementById('scp-err-close')
+    if (closeBtn) {
+      closeBtn.onclick = function() { container.innerHTML = '' }
     }
   }
 
@@ -323,11 +388,22 @@
       render()
     }
 
-    if (prog) prog.onclick = function (e) {
-      if (!widget || !currentDur) return
-      var rect = prog.getBoundingClientRect()
-      var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-      widget.seekTo(currentDur * pct)
+    if (prog) {
+      prog.onclick = function (e) {
+        if (!widget || !currentDur) return
+        var rect = prog.getBoundingClientRect()
+        var pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+        widget.seekTo(currentDur * pct)
+      }
+      prog.onkeydown = function(e) {
+        if (!widget || !currentDur) return
+        var step = currentDur * 0.05 // 5% step
+        if (e.key === 'ArrowRight') {
+          widget.seekTo(Math.min(currentDur, currentPos + step))
+        } else if (e.key === 'ArrowLeft') {
+          widget.seekTo(Math.max(0, currentPos - step))
+        }
+      }
     }
 
     if (trkBtn) trkBtn.onclick = function () {
@@ -335,9 +411,8 @@
       var isOpen = list.classList.contains('sc-player__tracks--open')
       list.classList.toggle('sc-player__tracks--open')
       trkBtn.setAttribute('aria-expanded', String(!isOpen))
-      // Update icon
       var icon = trkBtn.querySelector('.sc-player__tracks-btn-icon')
-      if (icon) icon.textContent = isOpen ? '\u2630' : '\u00D7'
+      if (icon) icon.innerHTML = isOpen ? '☰' : ICONS.close
     }
 
     if (list) {
@@ -350,7 +425,6 @@
     }
   }
 
-  /* ── Navigate to track ──────────────────────────────────────────── */
   function navTo(i) {
     var t = allTracks[i]
     if (!t || !t.permalink_url || !widget) return
@@ -366,19 +440,17 @@
     render()
     if (cfg.autoplayOnSelect !== false) {
       setTimeout(function () {
-        try { widget.play() } catch (e) { /* ignore */ }
+        try { widget.play() } catch (e) {}
       }, cfg.autoplayDelay || 500)
     }
   }
 
-  /* ── Cleanup on page unload ─────────────────────────────────────── */
   if (progressTimer) {
     window.addEventListener('beforeunload', function () {
       clearInterval(progressTimer)
     })
   }
 
-  /* ── Start ──────────────────────────────────────────────────────── */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       render()

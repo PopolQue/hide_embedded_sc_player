@@ -97,6 +97,8 @@ export default function SCPlayer({
   showNavButtons = true,
   autoplayOnSelect = true,
   autoplayDelay = 500,
+  persist = true,
+  storageKey = 'scp-state',
   theme = {},
   className = '',
 }: SCPlayerProps) {
@@ -104,12 +106,30 @@ export default function SCPlayer({
   const widgetRef = useRef<SCWidget | null>(null)
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Initialize from storage if enabled
+  const getInitialState = useCallback(() => {
+    if (!persist) return null
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  }, [persist, storageKey])
+
+  const initialState = getInitialState()
+
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
-  const [playlistKey, setPlaylistKey] = useState(
-    () => defaultPlaylist || Object.keys(playlists)[0]
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(
+    initialState?.index ?? 0
   )
-  const [progress, setProgress] = useState(0)
+  const [playlistKey, setPlaylistKey] = useState(() => {
+    if (initialState?.playlist && playlists[initialState.playlist]) {
+      return initialState.playlist
+    }
+    return defaultPlaylist || Object.keys(playlists)[0]
+  })
+  const [progress, setProgress] = useState(initialState?.progress ?? 0)
   const [duration, setDuration] = useState(0)
   const [showTracks, setShowTracks] = useState(false)
   const [widgetReady, setWidgetReady] = useState(false)
@@ -119,6 +139,17 @@ export default function SCPlayer({
   const allTracks = currentPlaylist?.tracks ?? []
   const currentTrack = allTracks[currentTrackIndex] ?? null
   const playlistKeys = Object.keys(playlists)
+
+  // Save state to storage
+  useEffect(() => {
+    if (!persist) return
+    const state = {
+      playlist: playlistKey,
+      index: currentTrackIndex,
+      progress: progress,
+    }
+    localStorage.setItem(storageKey, JSON.stringify(state))
+  }, [playlistKey, currentTrackIndex, progress, persist, storageKey])
 
   // Resolve theme to CSS custom properties
   const cssVars = useMemo<React.CSSProperties>(() => {
@@ -158,6 +189,15 @@ export default function SCPlayer({
     // Event handlers
     const handleReady = () => {
       setWidgetReady(true)
+
+      // If we have a persisted track/progress, load it
+      if (initialState && currentTrack?.permalink_url) {
+        widget.load(currentTrack.permalink_url, { autoPlay: false })
+        if (initialState.progress > 0) {
+          widget.seekTo(initialState.progress)
+        }
+      }
+
       widget.isPaused((paused) => setIsPlaying(!paused))
     }
 
@@ -221,14 +261,23 @@ export default function SCPlayer({
   }, [widgetReady])
 
   // Update duration when playlist changes
+  const isFirstMount = useRef(true)
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      if (currentTrack) {
+        setDuration(currentTrack.duration ?? 0)
+      }
+      return
+    }
+
     setCurrentTrackIndex(0)
     setProgress(0)
     setShowTracks(false)
     if (allTracks[0]) {
       setDuration(allTracks[0].duration ?? 0)
     }
-  }, [playlistKey, allTracks])
+  }, [playlistKey, allTracks, currentTrack])
 
   // Navigate to a specific track
   const navigateToTrack = useCallback(
