@@ -97,6 +97,8 @@ export default function SCPlayer({
   showNavButtons = true,
   autoplayOnSelect = true,
   autoplayDelay = 500,
+  persist = true,
+  storageKey = 'scp-state',
   theme = {},
   className = '',
 }: SCPlayerProps) {
@@ -104,21 +106,86 @@ export default function SCPlayer({
   const widgetRef = useRef<SCWidget | null>(null)
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Initialize from storage if enabled
+  const getInitialState = useCallback(() => {
+    if (!persist) return null
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  }, [persist, storageKey])
+
+  const initialState = getInitialState()
+
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0)
-  const [playlistKey, setPlaylistKey] = useState(
-    () => defaultPlaylist || Object.keys(playlists)[0]
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(
+    initialState?.index ?? 0
   )
-  const [progress, setProgress] = useState(0)
+  const [playlistKey, setPlaylistKey] = useState(() => {
+    if (initialState?.playlist && playlists[initialState.playlist]) {
+      return initialState.playlist
+    }
+    return defaultPlaylist || Object.keys(playlists)[0]
+  })
+  const [progress, setProgress] = useState(initialState?.progress ?? 0)
   const [duration, setDuration] = useState(0)
   const [showTracks, setShowTracks] = useState(false)
   const [widgetReady, setWidgetReady] = useState(false)
   const [widgetError, setWidgetError] = useState(false)
+  const [scriptLoaded, setScriptLoaded] = useState(() => !!window.SC?.Widget)
+
+  const playlistKeys = Object.keys(playlists)
+
+  // 1. Resolve SoundCloud Embed URL
+  const resolvedEmbedUrl = useMemo(() => {
+    if (scEmbedUrl) return scEmbedUrl
+
+    const firstKey = defaultPlaylist || playlistKeys[0]
+    const pl = playlists[firstKey]
+    if (!pl?.playlistId) return ''
+
+    // Extract numeric ID from "soundcloud:playlists:123456" or just use the ID
+    const idMatch = pl.playlistId.match(/\d+$/)
+    const numericId = idMatch ? idMatch[0] : pl.playlistId
+
+    return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/${numericId}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true`
+  }, [scEmbedUrl, defaultPlaylist, playlistKeys, playlists])
+
+  // 2. Automate SoundCloud API Script Injection
+  useEffect(() => {
+    if (window.SC?.Widget) {
+      setScriptLoaded(true)
+      return
+    }
+
+    const scriptId = 'sc-widget-api-script'
+    if (document.getElementById(scriptId)) return
+
+    const script = document.createElement('script')
+    script.id = scriptId
+    script.src = 'https://w.soundcloud.com/player/api.js'
+    script.async = true
+    script.onload = () => setScriptLoaded(true)
+    script.onerror = () => setWidgetError(true)
+    document.head.appendChild(script)
+  }, [])
 
   const currentPlaylist = playlists[playlistKey]
   const allTracks = currentPlaylist?.tracks ?? []
   const currentTrack = allTracks[currentTrackIndex] ?? null
-  const playlistKeys = Object.keys(playlists)
+
+  // Save state to storage
+  useEffect(() => {
+    if (!persist) return
+    const state = {
+      playlist: playlistKey,
+      index: currentTrackIndex,
+      progress: progress,
+    }
+    localStorage.setItem(storageKey, JSON.stringify(state))
+  }, [playlistKey, currentTrackIndex, progress, persist, storageKey])
 
   // Resolve theme to CSS custom properties
   const cssVars = useMemo<React.CSSProperties>(() => {
@@ -138,10 +205,9 @@ export default function SCPlayer({
     } as React.CSSProperties
   }, [theme])
 
-  // Initialize SoundCloud widget
+  // 3. Initialize SoundCloud widget
   useEffect(() => {
-    if (!iframeRef.current || !window.SC?.Widget) {
-      setWidgetError(true)
+    if (!scriptLoaded || !iframeRef.current || !window.SC?.Widget) {
       return
     }
 
@@ -158,6 +224,15 @@ export default function SCPlayer({
     // Event handlers
     const handleReady = () => {
       setWidgetReady(true)
+
+      // If we have a persisted track/progress, load it
+      if (initialState && currentTrack?.permalink_url) {
+        widget.load(currentTrack.permalink_url, { autoPlay: false })
+        if (initialState.progress > 0) {
+          widget.seekTo(initialState.progress)
+        }
+      }
+
       widget.isPaused((paused) => setIsPlaying(!paused))
     }
 
@@ -198,9 +273,9 @@ export default function SCPlayer({
         // Widget may already be destroyed — ignore
       }
     }
-    // Only re-init when embed URL changes
+    // Only re-init when embed URL changes or script loads
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scEmbedUrl])
+  }, [resolvedEmbedUrl, scriptLoaded])
 
   // Progress polling
   useEffect(() => {
@@ -221,14 +296,24 @@ export default function SCPlayer({
   }, [widgetReady])
 
   // Update duration when playlist changes
+  const isFirstMount = useRef(true)
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      if (currentTrack) {
+        setDuration(currentTrack.duration ?? 0)
+      }
+      return
+    }
+
+    // When playlistKey changes, reset to track 0
     setCurrentTrackIndex(0)
     setProgress(0)
     setShowTracks(false)
     if (allTracks[0]) {
       setDuration(allTracks[0].duration ?? 0)
     }
-  }, [playlistKey, allTracks])
+  }, [playlistKey]) // FIX: Only depend on playlistKey to avoid resetting on every track change
 
   // Navigate to a specific track
   const navigateToTrack = useCallback(
@@ -335,7 +420,7 @@ export default function SCPlayer({
       <iframe
         ref={iframeRef}
         className="sc-player__iframe"
-        src={scEmbedUrl}
+        src={resolvedEmbedUrl}
         allow="autoplay"
         title="SoundCloud Player (hidden)"
         tabIndex={-1}
