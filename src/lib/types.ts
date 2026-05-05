@@ -124,8 +124,8 @@ export type PlayerConfig = {
   playlists: Record<string, Playlist>
   /** Initial playlist to load. Defaults to first key. */
   defaultPlaylist?: string
-  /** SoundCloud iframe embed URL for the hidden widget */
-  scEmbedUrl: string
+  /** SoundCloud iframe embed URL for the hidden widget. If omitted, will be generated from the first playlist. */
+  scEmbedUrl?: string
   /** URL to the SoundCloud account. Default: `https://soundcloud.com` */
   scAccountUrl?: string
   /** Player bar position. Default: `'bottom'` */

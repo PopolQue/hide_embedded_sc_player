@@ -134,11 +134,47 @@ export default function SCPlayer({
   const [showTracks, setShowTracks] = useState(false)
   const [widgetReady, setWidgetReady] = useState(false)
   const [widgetError, setWidgetError] = useState(false)
+  const [scriptLoaded, setScriptLoaded] = useState(() => !!window.SC?.Widget)
+
+  const playlistKeys = Object.keys(playlists)
+
+  // 1. Resolve SoundCloud Embed URL
+  const resolvedEmbedUrl = useMemo(() => {
+    if (scEmbedUrl) return scEmbedUrl
+
+    const firstKey = defaultPlaylist || playlistKeys[0]
+    const pl = playlists[firstKey]
+    if (!pl?.playlistId) return ''
+
+    // Extract numeric ID from "soundcloud:playlists:123456" or just use the ID
+    const idMatch = pl.playlistId.match(/\d+$/)
+    const numericId = idMatch ? idMatch[0] : pl.playlistId
+
+    return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/${numericId}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true`
+  }, [scEmbedUrl, defaultPlaylist, playlistKeys, playlists])
+
+  // 2. Automate SoundCloud API Script Injection
+  useEffect(() => {
+    if (window.SC?.Widget) {
+      setScriptLoaded(true)
+      return
+    }
+
+    const scriptId = 'sc-widget-api-script'
+    if (document.getElementById(scriptId)) return
+
+    const script = document.createElement('script')
+    script.id = scriptId
+    script.src = 'https://w.soundcloud.com/player/api.js'
+    script.async = true
+    script.onload = () => setScriptLoaded(true)
+    script.onerror = () => setWidgetError(true)
+    document.head.appendChild(script)
+  }, [])
 
   const currentPlaylist = playlists[playlistKey]
   const allTracks = currentPlaylist?.tracks ?? []
   const currentTrack = allTracks[currentTrackIndex] ?? null
-  const playlistKeys = Object.keys(playlists)
 
   // Save state to storage
   useEffect(() => {
@@ -169,10 +205,9 @@ export default function SCPlayer({
     } as React.CSSProperties
   }, [theme])
 
-  // Initialize SoundCloud widget
+  // 2. Initialize SoundCloud widget
   useEffect(() => {
-    if (!iframeRef.current || !window.SC?.Widget) {
-      setWidgetError(true)
+    if (!scriptLoaded || !iframeRef.current || !window.SC?.Widget) {
       return
     }
 
@@ -240,7 +275,7 @@ export default function SCPlayer({
     }
     // Only re-init when embed URL changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scEmbedUrl])
+  }, [resolvedEmbedUrl, scriptLoaded])
 
   // Progress polling
   useEffect(() => {
@@ -384,7 +419,7 @@ export default function SCPlayer({
       <iframe
         ref={iframeRef}
         className="sc-player__iframe"
-        src={scEmbedUrl}
+        src={resolvedEmbedUrl}
         allow="autoplay"
         title="SoundCloud Player (hidden)"
         tabIndex={-1}

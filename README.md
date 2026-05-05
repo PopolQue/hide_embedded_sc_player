@@ -1,100 +1,74 @@
 # Hide Embedded SC Player
 
-A **reusable, themeable SoundCloud player** for festivals, labels, and radio stations.
-Persistent playback across page navigation via a hidden iframe controlled by the Widget API.
+A professional-grade, persistent SoundCloud audio player designed for music festivals, labels, and radio stations. This library provides an uninterrupted audio bridge that maintains playback across page transitions.
 
-This is a research project for [Bunte Platte e.V.](https://www.bunte-platte.de), the organisation behind [Klein und Haarig Festival](https://www.kleinundhaarig.de).
+Developed for [Bunte Platte e.V.](https://www.bunte-platte.de) and the [Klein und Haarig Festival](https://www.kleinundhaarig.de).
 
-## Repository Structure
+---
 
-- `src/lib/`: Core React component and library logic.
-  - `playlists.json`: **Centralized playlist data.** Edit this file to update tracks.
-- `standalone/`: Vanilla JS / "No-build" version for easy implementation into any website.
-- `docs/`: Live demo files.
+## Features
 
-## Quick Start
+- **Uninterrupted Playback:** Audio remains persistent during navigation via a shell-based iframe architecture.
+- **Dual Implementation:** Available as a React component or a zero-dependency standalone script.
+- **URL Synchronization:** Built-in hash-based routing (`/#/sub-page`) ensures deep-linking and browser history support.
+- **Theming System:** Fully customizable via CSS Custom Properties (Variables) or configuration objects.
+- **Performance Optimized:** Zero runtime dependencies; utilizes the SoundCloud Widget API and local metadata caching.
 
-### 1. Update Playlist Data
+---
 
-Edit `src/lib/playlists.json`. This file is the single source of truth for both the React and Standalone versions.
+## Implementation Paths
 
-To update the Standalone version after editing the JSON, you can run:
+### 1. Standalone Shell (Non-React Environments)
 
-```bash
-echo "window.PLAYER_PLAYLISTS = " > standalone/playlists.js && cat src/lib/playlists.json >> standalone/playlists.js
-```
+The standalone version is designed for integration into any existing site architecture (e.g., WordPress, static sites, or custom CMS).
 
-### 2. Implementation
+1. **Configure:** Update `window.PLAYER_CONFIG` in `standalone/shell.html` with your site's `initialContentUrl`.
+2. **Deploy:** Upload the contents of the `standalone/` directory to your web server.
+3. **Route:** Direct your primary domain or entry point to `shell.html`.
 
-#### React Component
+### 2. React Component
 
-Import the player and provide the centralized data:
+For modern web applications. The component automatically handles API loading and configuration.
 
 ```tsx
 import SCPlayer from './lib/SCPlayer'
 import { PLAYLISTS } from './lib/data'
 import './lib/SCPlayer.css'
 
-// Load SoundCloud API in your HTML:
-// <script src="https://w.soundcloud.com/player/api.js"></script>
-
 function App() {
   return (
     <SCPlayer
       playlists={PLAYLISTS}
-      defaultPlaylist="2025"
-      scEmbedUrl="https://w.soundcloud.com/player/?url=..."
-      scAccountUrl="https://soundcloud.com/kleinundhaarig"
+      scAccountUrl="https://soundcloud.com/your-profile"
     />
   )
 }
 ```
 
-#### Drop-in Shell (No Build)
+---
 
-The `standalone/` directory contains everything you need to wrap an existing site with a persistent player:
+## Configuration
 
-1. Copy `standalone/shell.html`, `standalone/sc-player-standalone.js`, and `standalone/playlists.js` to your server.
-2. Edit `PLAYER_CONFIG` in `shell.html` to point to your website (change the `iframe` src).
-3. Done!
+| Property | Default | Description |
+| :--- | :--- | :--- |
+| `bg` | `#1a1a24` | Player bar background color |
+| `accent` | `#1a1a1a` | High-contrast color for controls and progress |
+| `text` | `#d1d1d1` | Primary typography color |
+| `barHeight` | `64px` | Fixed height of the player interface |
+| `position` | `bottom` | Vertical alignment: `top` or `bottom` |
+| `syncUrl` | `true` | Enable/disable browser URL hash synchronization |
 
-## Theming
+---
 
-Colors and dimensions are customizable via the `theme` prop or CSS custom properties:
+## Project Structure
 
-```tsx
-<SCPlayer
-  theme={{
-    bg: '#111316',
-    accent: '#aa3bff',
-    // ...
-  }}
-/>
-```
+- `src/lib/`: Core React component logic and TypeScript definitions.
+- `standalone/`: Production-ready vanilla JS implementation and shell container.
+- `playlists.json`: Centralized data store for all track metadata.
+- `TECHNICAL.md`: Comprehensive architectural documentation and API details.
 
-### Default Theme Variables
+---
 
-| Variable | Default | Description |
-| -------- | ------- | ----------- |
-| `--scp-bg` | `#1d1d1d` | Player bar background |
-| `--scp-accent` | `#1a1a1a` | Progress bar and active highlights |
-| `--scp-bar-h` | `64px` | Height of the player bar |
+## License
 
-## Development
-
-```bash
-npm install
-npm run dev       # Start demo with hot reload
-npm run build     # Build library
-npm run build:demo # Build demo for production
-```
-
-## Architecture
-
-The player uses a **hidden SoundCloud iframe** controlled via the [Widget API](https://developers.soundcloud.com/docs/api/html5-widget).
-All track metadata is provided locally in `playlists.json` — no API calls needed at runtime.
-
-The **shell pattern** wraps your site in two frames:
-
-- **Content frame** — your actual website (navigable without reloading player)
-- **Player bar** — fixed footer with persistent audio
+MIT © [PopolQue](https://github.com/PopolQue) / [Bunte Platte e.V.](https://www.bunte-platte.de)
