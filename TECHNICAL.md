@@ -37,7 +37,7 @@ The component automatically manages the SoundCloud Widget API:
 
 ### Metadata Management
 
-Instead of fetching metadata from the SoundCloud API at runtime (which requires a Client ID and can be slow), we bundle track metadata (ID, title, artist, duration, permalink) in a local `playlists.json`. This ensures:
+Instead of fetching metadata from the SoundCloud API at runtime (which requires a Client ID and can be slow), we bundle track metadata (ID, title, artist, duration, artwork, permalink) in a local `playlists.json`. This ensures:
 
 1. **Instant UI Updates:** No "Loading..." states for track titles.
 2. **Stability:** The player works even if the SoundCloud API metadata endpoints are slow.
