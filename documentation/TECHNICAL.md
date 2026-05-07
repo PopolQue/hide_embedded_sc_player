@@ -8,6 +8,49 @@ This document explains the architecture and underlying mechanisms of the **Hide 
 
 The core problem of web audio is that it stops when the `window` object is destroyed (i.e., when a user navigates to a new page). To solve this, we use a "Shell Architecture":
 
+### Architecture Diagram
+
+```mermaid
+graph TD
+    User((User)) --> Browser[Browser Window]
+    subgraph Parent Window: shell.html
+        Player[SC-Player UI]
+        Bridge[Audio Bridge Script]
+        HiddenWidget[Hidden SC Widget Iframe]
+    end
+    subgraph Content Iframe
+        Site[Your Website]
+    end
+    Browser --> Player
+    Browser --> Site
+    Player -.->|Commands| HiddenWidget
+    HiddenWidget -.->|Events| Player
+    Site -.->|URL Sync| Bridge
+    Bridge -.->|Hash Sync| Site
+```
+
+### State Synchronization Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as Site (Iframe)
+    participant P as Player Shell (Parent)
+    participant W as SoundCloud Widget
+
+    U->>S: Click Link "/lineup"
+    S->>S: Navigate to /lineup
+    S->>P: window.parent.postMessage({ type: 'NAV', url: '/#/lineup' })
+    P->>P: window.history.replaceState(..., '/#/lineup')
+    P->>P: Update UI State
+    
+    U->>P: Click "Play"
+    P->>W: widget.play()
+    W->>W: Start Audio
+    W-->>P: Event: PLAY
+    P->>P: Set isPlaying = true
+```
+
 1. **Parent Window (`shell.html`):** This is the permanent home of the audio player. It never reloads.
 2. **Content Iframe:** Your actual website is loaded inside an `<iframe>`. Navigation clicks change the URL *inside* this frame, leaving the parent window untouched.
 3. **Hidden Widget Iframe:** A second, hidden iframe loads the SoundCloud Widget. This allows us to use the SoundCloud API without showing their default player UI.
@@ -80,7 +123,7 @@ When the user returns to the site or refreshes the page, the player silently rel
 
 ---
 
-## 🔧 Maintenance
+## Maintenance
 
 ### Adding New Tracks
 
@@ -89,5 +132,8 @@ When the user returns to the site or refreshes the page, the player silently rel
   
     ```bash
     # From the project root
+    node -e "const fs = require('fs'); const data = fs.readFileSync('src/lib/playlists.json', 'utf8'); fs.writeFileSync('standalone/playlists.js', 'window.PLAYER_PLAYLISTS = ' + data);"
+
+    ```bash
     node -e "const fs = require('fs'); const data = fs.readFileSync('src/lib/playlists.json', 'utf8'); fs.writeFileSync('standalone/playlists.js', 'window.PLAYER_PLAYLISTS = ' + data);"
     ```

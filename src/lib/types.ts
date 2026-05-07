@@ -1,70 +1,118 @@
 // ── SoundCloud Widget API types ──────────────────────────────────────
 
-/** SoundCloud user metadata from Widget API */
+/**
+ * SoundCloud user metadata returned by the Widget API.
+ */
 export type SCUser = {
+  /** The display name of the user/artist */
   username: string
 }
 
-/** SoundCloud sound object from Widget API */
+/**
+ * SoundCloud sound object containing metadata for a single track.
+ */
 export type SCSound = {
+  /** Unique numeric ID of the track */
   id: number
+  /** The track title */
   title: string
+  /** The artist/user who uploaded the track */
   user: SCUser
+  /** URL to the track artwork (various sizes available) */
   artwork_url?: string | null
+  /** Total duration in milliseconds */
   duration?: number
+  /** Public permalink URL of the track */
   permalink_url?: string
 }
 
-/** Events emitted by the SoundCloud Widget */
+/**
+ * Events emitted by the SoundCloud Widget API.
+ * @see https://developers.soundcloud.com/docs/api/html5-widget#events
+ */
 export type SCWidgetEvents = {
+  /** Fired when the widget has loaded its assets and is ready for interaction */
   READY: string
+  /** Fired when playback starts */
   PLAY: string
+  /** Fired when playback is paused */
   PAUSE: string
+  /** Fired periodically during playback to indicate current position */
   PLAY_PROGRESS: string
+  /** Fired when the current sound changes (e.g. next track or new load) */
   SOUND_CHANGE: string
+  /** Fired when an error occurs within the widget */
   ERROR: string
+  /** Fired when the current sound finishes playing */
   FINISH: string
 }
 
-/** SoundCloud Widget constructor and API */
+/**
+ * Interface for the SoundCloud Widget controller.
+ * @see https://developers.soundcloud.com/docs/api/html5-widget#methods
+ */
 export type SCWidget = {
+  /** Bind a listener to a widget event */
   bind(event: string, callback: (data?: unknown) => void): void
+  /** Unbind listeners from a widget event */
   unbind(event?: string): void
+  /** Start playback */
   play(): void
+  /** Pause playback */
   pause(): void
+  /** Toggle between play and pause states */
   toggle(): void
+  /** Skip to the next track in the current playlist */
   next(): void
+  /** Skip to the previous track in the current playlist */
   prev(): void
+  /** Load a new SoundCloud URL into the widget */
   load(url: string, options?: { autoPlay?: boolean }): void
+  /** Seek to a specific position in milliseconds */
   seekTo(milliseconds: number): void
+  /** Retrieve the total duration of the current sound */
   getDuration(callback: (ms: number) => void): void
+  /** Retrieve the current playback position in milliseconds */
   getPosition(callback: (ms: number) => void): void
+  /** Retrieve the current volume (0.0 to 1.0) */
   getVolume(callback: (volume: number) => void): void
+  /** Set the widget volume (0.0 to 1.0) */
   setVolume(volume: number): void
+  /** Retrieve the metadata for the current sound */
   getCurrentSound(
     callback: (sound: SCSound | null) => void
   ): void
+  /** Check if the player is currently paused */
   isPaused(callback: (paused: boolean) => void): void
+  /** Retrieve an array of all sounds in the current playlist */
   getSounds(callback: (sounds: SCSound[]) => void): void
 }
 
-/** SoundCloud Widget API on window */
+/**
+ * The global SoundCloud API object injected by `api.js`.
+ */
 export type SoundCloudAPI = {
   Widget: {
+    /** Constructor for a new Widget instance */
     new (element: HTMLIFrameElement): SCWidget
+    /** Constant map of available widget events */
     Events: SCWidgetEvents
   }
 }
 
 declare global {
   interface Window {
+    /** The SoundCloud Widget API global instance */
     SC?: SoundCloudAPI
   }
 }
 
 // ── Player domain types ──────────────────────────────────────────────
 
-/** A single track in a playlist */
+/**
+ * Data structure for a single track within the SCPlayer system.
+ * This is used for local metadata rendering and navigation.
+ */
 export type Track = {
   /** Unique SoundCloud track ID */
   id: number
@@ -76,82 +124,95 @@ export type Track = {
   duration: number
   /** Cover art URL (high-res preferred) */
   artwork_url?: string | null
-  /** SoundCloud track permalink URL (required for playback) */
+  /** SoundCloud track permalink URL (required for playback commands) */
   permalink_url: string
 }
 
-/** A collection of tracks (e.g. a year's releases) */
+/**
+ * A collection of tracks with metadata for a specific grouping (e.g. "2024 Releases").
+ */
 export type Playlist = {
-  /** Display name shown in the playlist selector */
+  /** Human-readable name shown in the playlist selector */
   label: string
   /** SoundCloud playlist ID (e.g. "soundcloud:playlists:123456") */
   playlistId: string
-  /** Public SoundCloud playlist URL */
+  /** Public URL to the SoundCloud playlist page */
   url: string
-  /** All tracks in this playlist */
+  /** Array of track metadata objects */
   tracks: Track[]
 }
 
-/** Theme configuration for customizing the player appearance */
+/**
+ * Configuration for the player's visual appearance.
+ * All properties are optional and fallback to project defaults.
+ */
 export type ThemeConfig = {
-  /** Player bar background color. Default: `#1a1a24` */
+  /** Background color of the main player bar. Default: `#1a1a24` */
   bg?: string
-  /** Border color. Default: `#333842` */
+  /** Color of borders and dividers. Default: `#333842` */
   border?: string
-  /** Primary text color. Default: `#ffffffde` */
+  /** Primary text color (Title). Default: `#ffffffde` */
   text?: string
-  /** Muted/secondary text color. Default: `#9ca3af` */
+  /** Secondary/muted text color (Artist, Duration). Default: `#9ca3af` */
   muted?: string
-  /** Accent color (play button, progress bar, active state). Default: `#aa3bff` */
+  /** Brand/accent color used for progress, play button, and active states. Default: `#aa3bff` */
   accent?: string
-  /** Accent hover color. Default: `#9a2bff` */
+  /** Hover state color for the accent elements. Default: `#9a2bff` */
   accentHover?: string
-  /** Active track highlight background. Default: `#64646426` */
+  /** Background highlight color for the currently playing track in the list. Default: `#64646426` */
   activeBg?: string
-  /** Track list dropdown background. Default: `#242430` */
+  /** Background color for the track list slide-up panel. Default: `#242430` */
   listBg?: string
-  /** Player bar height. Default: `64px` */
+  /** Height of the player bar. Default: `64px` */
   barHeight?: string
-  /** Border radius for artwork and UI elements. Default: `4px` */
+  /** Border radius for artwork and UI controls. Default: `4px` */
   borderRadius?: string
-  /** Font family. Default: `Inter, system-ui, sans-serif` */
+  /** Font family stack. Default: `Inter, system-ui, sans-serif` */
   fontFamily?: string
 }
 
-/** Core player configuration (shared between React and standalone) */
+/**
+ * Core functional configuration for the SCPlayer.
+ * These settings control behavior, persistence, and feature visibility.
+ */
 export type PlayerConfig = {
-  /** Available playlists keyed by identifier */
+  /** Map of available playlists, keyed by a unique identifier */
   playlists: Record<string, Playlist>
-  /** Initial playlist to load. Defaults to first key. */
+  /** Key of the playlist to load on mount. Defaults to the first key in `playlists`. */
   defaultPlaylist?: string
-  /** SoundCloud iframe embed URL for the hidden widget. If omitted, will be generated from the first playlist. */
+  /** 
+   * Explicit URL for the hidden SoundCloud iframe. 
+   * If omitted, the player generates a valid URL from the `defaultPlaylist` ID.
+   */
   scEmbedUrl?: string
-  /** URL to the SoundCloud account. Default: `https://soundcloud.com` */
+  /** Link to the SoundCloud profile page. Default: `https://soundcloud.com` */
   scAccountUrl?: string
-  /** Player bar position. Default: `'bottom'` */
+  /** Fixed position of the player bar on the screen. Default: `'bottom'` */
   position?: 'bottom' | 'top'
-  /** Show playlist/playlist selector. Default: `true` */
+  /** Toggle visibility of the playlist selector dropdown. Default: `true` */
   showPlaylistSelect?: boolean
-  /** Show track list toggle button. Default: `true` */
+  /** Toggle visibility of the track list toggle button. Default: `true` */
   showTrackList?: boolean
-  /** Show progress bar. Default: `true` */
+  /** Toggle visibility of the top progress/seek bar. Default: `true` */
   showProgress?: boolean
-  /** Show prev/next navigation buttons. Default: `true` */
+  /** Toggle visibility of the Play/Prev/Next controls. Default: `true` */
   showNavButtons?: boolean
-  /** Auto-play when a track is selected. Default: `true` */
+  /** Whether to start playback immediately when a track is manually selected. Default: `true` */
   autoplayOnSelect?: boolean
-  /** Delay before auto-playing after track selection (ms). Default: `500` */
+  /** Delay in milliseconds before triggering autoplay (to allow widget load). Default: `500` */
   autoplayDelay?: number
-  /** Enable state persistence (playlist, track, progress). Default: `true` */
+  /** Whether to save/restore play state (playlist, index, progress) to localStorage. Default: `true` */
   persist?: boolean
-  /** Custom localStorage key. Default: `scp-state` */
+  /** Custom key used for localStorage persistence. Default: `'scp-state'` */
   storageKey?: string
 }
 
-/** React component props — extends PlayerConfig with theme and className */
+/**
+ * Props for the SCPlayer React component.
+ */
 export type SCPlayerProps = PlayerConfig & {
-  /** Theme overrides (partial). CSS custom properties take precedence. */
+  /** Custom theme overrides. */
   theme?: ThemeConfig
-  /** Additional CSS class applied to the root element */
+  /** Optional CSS class applied to the root player container. */
   className?: string
 }

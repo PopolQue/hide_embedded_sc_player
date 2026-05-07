@@ -85,6 +85,13 @@ function IconClose() {
 
 // ── Component ────────────────────────────────────────────────────────
 
+/**
+ * The primary entry point for the SoundCloud Player library.
+ * This component manages the hidden SoundCloud Widget iframe and provides a
+ * custom, themeable UI for controlling playback.
+ * 
+ * @param props - Configuration and theme options for the player.
+ */
 export default function SCPlayer({
   playlists,
   defaultPlaylist,
@@ -102,11 +109,17 @@ export default function SCPlayer({
   theme = {},
   className = '',
 }: SCPlayerProps) {
+  /** Reference to the hidden SoundCloud iframe required by the Widget API */
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  /** Reference to the initialized SoundCloud Widget instance */
   const widgetRef = useRef<SCWidget | null>(null)
+  /** Timer used for polling playback progress from the widget */
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Initialize from storage if enabled
+  /** 
+   * Retrieves the persisted player state from localStorage.
+   * Runs only during initialization to restore the user's last session.
+   */
   const getInitialState = useCallback(() => {
     if (!persist) return null
     try {
@@ -119,21 +132,32 @@ export default function SCPlayer({
 
   const initialState = getInitialState()
 
+  // ── State ──────────────────────────────────────────────────────────
+
+  /** Whether audio is currently playing */
   const [isPlaying, setIsPlaying] = useState(false)
+  /** Zero-based index of the current track within the active playlist */
   const [currentTrackIndex, setCurrentTrackIndex] = useState(
     initialState?.index ?? 0
   )
+  /** Key identifying the currently active playlist */
   const [playlistKey, setPlaylistKey] = useState(() => {
     if (initialState?.playlist && playlists[initialState.playlist]) {
       return initialState.playlist
     }
     return defaultPlaylist || Object.keys(playlists)[0]
   })
+  /** Current playback position in milliseconds */
   const [progress, setProgress] = useState(initialState?.progress ?? 0)
+  /** Total duration of the current track in milliseconds */
   const [duration, setDuration] = useState(0)
+  /** Whether the track list slide-up panel is visible */
   const [showTracks, setShowTracks] = useState(false)
+  /** Whether the SoundCloud Widget API has successfully initialized */
   const [widgetReady, setWidgetReady] = useState(false)
+  /** Whether an error occurred while loading the widget or tracks */
   const [widgetError, setWidgetError] = useState(false)
+  /** Whether the external SoundCloud Widget script has been loaded into the DOM */
   const [scriptLoaded, setScriptLoaded] = useState(() => !!window.SC?.Widget)
 
   const playlistKeys = Object.keys(playlists)

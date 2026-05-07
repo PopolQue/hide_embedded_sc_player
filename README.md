@@ -1,49 +1,62 @@
 # Hide Embedded SC Player
 
-A professional-grade, persistent SoundCloud audio player designed for music festivals, labels, and radio stations. This library provides an uninterrupted audio bridge that maintains playback across page transitions.
+A professional-grade, persistent SoundCloud audio player designed for music festivals, labels, and radio stations. This library provides a high-level abstraction over the **official SoundCloud Widget API**, offering an uninterrupted audio bridge that maintains playback across page transitions.
 
 Developed for [Bunte Platte e.V.](https://www.bunte-platte.de) and the [Klein und Haarig Festival](https://www.kleinundhaarig.de).
 
 ---
 
-## Features
+## Powered by the SoundCloud Widget API
 
-- **Uninterrupted Playback:** Audio remains persistent during navigation via a shell-based iframe architecture.
-- **Dual Implementation:** Available as a React component or a zero-dependency standalone script.
-- **URL Synchronization:** Built-in hash-based routing (`/#/sub-page`) ensures deep-linking and browser history support.
-- **Theming System:** Fully customizable via CSS Custom Properties (Variables) or configuration objects.
-- **Performance Optimized:** Zero runtime dependencies; utilizes the SoundCloud Widget API and local metadata caching.
+The SCPlayer is not a standalone audio engine; it is a **sophisticated controller** for the official SoundCloud iframe widget.
+
+- **Full Compatibility:** We use the `https://w.soundcloud.com/player/api.js` library to send commands and listen to events.
+- **Deep Integration:** By leveraging the `READY`, `PLAY`, `PAUSE`, and `FINISH` events, we sync our custom UI state perfectly with SoundCloud's backend.
+- **Remote Control:** Our "Shell Architecture" allows you to control a hidden SoundCloud instance from a completely different window context (the parent shell).
+
+> **Learn More:** See [📐 Architecture & Sync](./documentation/TECHNICAL.md) for a deep dive into the API bridge.
 
 ---
 
-## Implementation Paths
+## Documentation Hub
 
-### 1. Standalone Shell (Non-React Environments)
+Choose your path based on your role and technical stack.
 
-The standalone version is designed for integration into any existing site architecture (e.g., WordPress, static sites, or custom CMS).
+### Getting Started
 
-1. **Configure:** Update `window.PLAYER_CONFIG` in `standalone/shell.html` with your site's `initialContentUrl`.
-2. **Deploy:** Upload the contents of the `standalone/` directory to your web server.
-3. **Route:** Direct your primary domain or entry point to `shell.html`.
+- **[Shell Implementation](./documentation/INTEGRATION_SHELL.md)** — Best for WordPress, Shopify, or static sites.
+- **[React Component](./documentation/INTEGRATION_REACT.md)** — Best for modern SPAs and App Router projects.
+- **[Standalone Script](./documentation/INTEGRATION_STANDALONE.md)** — Best for simple vanilla JS integrations.
 
-### 2. React Component
+### Technical Deep-Dives
 
-For modern web applications. The component automatically handles API loading and configuration.
+- **[Architecture & Sync](./documentation/TECHNICAL.md)** — Sequence diagrams and state logic.
+- **[API Reference](./documentation/API_REFERENCE.md)** — Deep dive into CSS classes and props.
+- **[Theming Reference](./documentation/THEMING.md)** — Every CSS variable documented.
+- **[Security & Privacy](./documentation/SECURITY.md)** — CSP, iframes, and data safety.
+- **[Accessibility (a11y)](./documentation/ACCESSIBILITY.md)** — Keyboard and screen reader support.
+- **[Performance & Optimization](./documentation/PERFORMANCE.md)** — Lighthouse and bandwidth tips.
+- **[Browser Support](./documentation/BROWSER_SUPPORT.md)** — Compatibility matrix.
 
-```tsx
-import SCPlayer from './lib/SCPlayer'
-import { PLAYLISTS } from './lib/data'
-import './lib/SCPlayer.css'
+### Customization & Content
 
-function App() {
-  return (
-    <SCPlayer
-      playlists={PLAYLISTS}
-      scAccountUrl="https://soundcloud.com/your-profile"
-    />
-  )
-}
-```
+- **[Artist Guide: Adding Tracks](./documentation/GUIDE_ADDING_TRACKS.md)** — Non-technical content update guide.
+- **[Internationalization (i18n)](./documentation/I18N.md)** — Translating the player UI.
+- **[Comparison Analysis](./documentation/COMPARISON.md)** — Why SCPlayer vs standard embeds.
+- **[Recipes & Snippets](./documentation/RECIPES.md)** — Common code patterns.
+- **[Examples Gallery](./examples/)** — Next.js, WordPress, and Custom Icons.
+
+### Community & Maintenance
+
+- **[Troubleshooting & FAQ](./documentation/TROUBLESHOOTING.md)** — Common fixes.
+- **[Privacy & GDPR](./documentation/PRIVACY_GDPR.md)** — Cookie compliance.
+- **[Testing Strategy](./documentation/TESTING.md)** — How to verify your implementation.
+- **[Design Decisions](./documentation/DESIGN_DECISIONS.md)** — The "Why" behind the architecture.
+- **[Project Philosophy](./documentation/PHILOSOPHY.md)** — Vision and non-goals.
+- **[Project Roadmap](./documentation/ROADMAP.md)** — Future plans.
+- **[Contributing Guide](./documentation/CONTRIBUTING.md)** — Standards & code of conduct.
+- **[Changelog](./documentation/CHANGELOG.md)** — Release history.
+- **[Master Index](./documentation/SUMMARY.md)** — All 27 modules in one place.
 
 ---
 
@@ -60,15 +73,6 @@ function App() {
 
 ---
 
-## Project Structure
-
-- `src/lib/`: Core React component logic and TypeScript definitions.
-- `standalone/`: Production-ready vanilla JS implementation and shell container.
-- `playlists.json`: Centralized data store for all track metadata.
-- `TECHNICAL.md`: Comprehensive architectural documentation and API details.
-
----
-
 ## License
 
-MIT © [PopolQue](https://github.com/PopolQue) / [Bunte Platte e.V.](https://www.bunte-platte.de)
+MIT © [PopolQue](https://github.com/PopolQue) / [Bunte Platte e.V.](https://www.bunte-platte.de). See the [LICENSE](./LICENSE) file for details.
