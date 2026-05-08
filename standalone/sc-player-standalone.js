@@ -214,9 +214,20 @@
       widget.getCurrentSound(function (s) {
         if (s) {
           var i = findTrackIndex(s.id)
-          if (i >= 0) currentIdx = i
-          widget.getDuration(function (d) { currentDur = d })
-          updatePlayButton()
+          if (i >= 0) {
+            currentIdx = i
+            // Prioritize local duration metadata if available to avoid widget bugs
+            if (allTracks[i].duration) {
+              currentDur = allTracks[i].duration
+              updatePlayButton()
+              return
+            }
+          }
+          // Fallback to widget duration if local metadata is missing
+          widget.getDuration(function (d) {
+            currentDur = d
+            updatePlayButton()
+          })
         }
       })
     })

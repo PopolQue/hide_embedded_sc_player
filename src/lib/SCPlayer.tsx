@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-import type { SCPlayerProps, SCWidget, SCWidgetEvents } from './types'
+import type { SCPlayerProps, SCWidget } from './types'
 import scLogo from './assets/sc-logo.png'
 import './SCPlayer.css'
 
@@ -266,10 +266,17 @@ export default function SCPlayer({
     const handleSoundChange = () => {
       widget.getCurrentSound((sound) => {
         if (sound) {
+          // Find the track in our local metadata to keep UI in sync
           const idx = allTracks.findIndex((t) => t.id === sound.id)
           if (idx >= 0) {
             setCurrentTrackIndex(idx)
+            // Prioritize local duration metadata if available to avoid widget bugs
+            if (allTracks[idx].duration) {
+              setDuration(allTracks[idx].duration)
+              return
+            }
           }
+          // Fallback to widget duration if local metadata is missing
           widget.getDuration((d) => setDuration(d))
         }
       })
@@ -297,9 +304,8 @@ export default function SCPlayer({
         // Widget may already be destroyed — ignore
       }
     }
-    // Only re-init when embed URL changes or script loads
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedEmbedUrl, scriptLoaded])
+    // Re-bind when tracks or embed URL changes to avoid stale closures
+  }, [resolvedEmbedUrl, scriptLoaded, allTracks])
 
   // Progress polling
   useEffect(() => {
@@ -319,7 +325,14 @@ export default function SCPlayer({
     }
   }, [widgetReady])
 
-  // Update duration when playlist changes
+  // Sync duration with current track metadata
+  useEffect(() => {
+    if (currentTrack?.duration) {
+      setDuration(currentTrack.duration)
+    }
+  }, [currentTrack])
+
+  // Update state when playlist changes
   const isFirstMount = useRef(true)
   useEffect(() => {
     if (isFirstMount.current) {
@@ -337,7 +350,7 @@ export default function SCPlayer({
     if (allTracks[0]) {
       setDuration(allTracks[0].duration ?? 0)
     }
-  }, [playlistKey]) // FIX: Only depend on playlistKey to avoid resetting on every track change
+  }, [playlistKey])
 
   // Navigate to a specific track
   const navigateToTrack = useCallback(
@@ -346,6 +359,8 @@ export default function SCPlayer({
       if (!track?.permalink_url || !widgetRef.current) return
 
       setCurrentTrackIndex(index)
+      if (track.duration) setDuration(track.duration)
+
       try {
         widgetRef.current.load(track.permalink_url)
       } catch {
