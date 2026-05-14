@@ -150,24 +150,66 @@ a.sc-player__title:hover {
   padding: 6px 10px;
   border-radius: 50%;
   font-size: 16px;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sc-player__btn:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
+.sc-player__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .sc-player__btn--play {
   background: var(--scp-accent) !important;
   width: 36px;
   height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .sc-player__btn--play:hover {
   background: var(--scp-accent-hover) !important;
+}
+
+.sc-player__btn--active {
+  color: var(--scp-accent);
+}
+
+.sc-player__volume {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sc-player__volume-slider {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 100px;
+  background: var(--scp-bg);
+  border: 1px solid var(--scp-border);
+  border-radius: var(--scp-radius);
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10001;
+}
+
+.sc-player__volume-slider input {
+  writing-mode: bt-lr; /* Bottom to top */
+  appearance: slider-vertical;
+  width: 4px;
+  height: 80px;
+  cursor: pointer;
+  accent-color: var(--scp-accent);
 }
 
 .sc-player__select {
@@ -189,18 +231,38 @@ a.sc-player__title:hover {
 /* ── Progress Bar ──────────────────────────────────────────────── */
 .sc-player__progress {
   flex: 1;
-  height: 4px;
+  height: 6px;
   background: rgba(187, 187, 187, 0.1);
-  border-radius: 2px;
+  border-radius: 3px;
   cursor: pointer;
   position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sc-player__progress:hover .sc-player__progress-handle {
+  opacity: 1;
 }
 
 .sc-player__progress-fill {
   height: 100%;
   background: var(--scp-accent);
-  border-radius: 2px;
+  border-radius: 3px;
   transition: width 0.1s;
+}
+
+.sc-player__progress-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
 }
 
 /* ── Track List Button ─────────────────────────────────────────── */
@@ -213,10 +275,21 @@ a.sc-player__title:hover {
   padding: 6px 8px;
   font-family: var(--scp-font);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .sc-player__tracks-btn:hover {
   color: var(--scp-text);
+}
+
+.sc-player__tracks-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
 }
 
 /* ── Track List Dropdown ───────────────────────────────────────── */
@@ -232,6 +305,9 @@ a.sc-player__title:hover {
   border-radius: 8px 0 0 0;
   overflow-y: auto;
   z-index: 9998;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 
   /* Standalone variant: toggle visibility via class */
   display: none;
@@ -241,12 +317,20 @@ a.sc-player__title:hover {
   display: block;
 }
 
+.sc-player__track-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sc-player__track-item:last-child {
+  border-bottom: none;
+}
+
 .sc-player__track {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: none;
   border: none;
   color: var(--scp-text);
