@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   root: 'src/demo',
   publicDir: resolve(__dirname, 'public'),
-  base: '/',
+  base: './',
   server: {
     open: '/',
     port: 3000,
