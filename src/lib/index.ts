@@ -14,17 +14,20 @@
  * ```
  */
 
-export { default } from './SCPlayer'
-export { PLAYLISTS } from './data'
+import { SCPlayer } from './SCPlayer.tsx'
+export { SCPlayer }
+export default SCPlayer
+export { PLAYLISTS } from './data.ts'
+
 export type {
-  Track,
-  Playlist,
-  ThemeConfig,
-  PlayerConfig,
-  SCPlayerProps,
-  SCWidget,
-  SCSound,
-  SCUser,
-  SCWidgetEvents,
-  SoundCloudAPI,
-} from './types'
+    Track,
+    Playlist,
+    ThemeConfig,
+    PlayerConfig,
+    SCPlayerProps,
+    SCWidget,
+    SCSound,
+    SCUser,
+    SCWidgetEvents,
+    SoundCloudAPI,
+} from './types.ts'
