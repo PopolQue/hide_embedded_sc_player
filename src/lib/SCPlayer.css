@@ -342,6 +342,10 @@ a.sc-player__title:hover {
 
 /* ── Track List Button ─────────────────────────────────────────── */
 .sc-player__tracks-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   background: none;
   border: none;
   color: var(--scp-muted);
