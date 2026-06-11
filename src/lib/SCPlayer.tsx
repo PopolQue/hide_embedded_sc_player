@@ -950,7 +950,7 @@ export function SCPlayer({
                         </div>
                     </div>
                 </div>
-            </div>
+
             {showTrackList && (
                 <div
                     id="sc-player-track-list"
@@ -1013,6 +1013,7 @@ export function SCPlayer({
                     ))}
                 </div>
             )}
+            </div>
         </div>
     )
 }

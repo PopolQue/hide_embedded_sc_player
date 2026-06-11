@@ -359,9 +359,9 @@ a.sc-player__title:hover {
 /* ── Track List Dropdown ───────────────────────────────────────── */
 .sc-player__tracks,
 .sc-player__playlists {
-  position: fixed;
-  right: 0;
-  bottom: calc(var(--scp-bar-h));
+  position: absolute;
+  right: 20px;
+  bottom: 100%;
   width: 300px;
   max-height: 390px;
   /* 390px perfectly covers 10 items */
@@ -378,7 +378,7 @@ a.sc-player__title:hover {
 
 .sc-player--top .sc-player__tracks,
 .sc-player--top .sc-player__playlists {
-  top: calc(var(--scp-bar-h) + 20px);
+  top: 100%;
   bottom: auto;
   border-radius: 0;
   border-top: none;
@@ -618,12 +618,11 @@ a.sc-player__title:hover {
   .sc-player__tracks,
   .sc-player__playlists {
     width: 100%;
-    max-width: 300px;
-    max-height: 390px;
+    max-width: 100%;
     right: 0;
-    left: auto;
+    left: 0;
     top: auto;
-    bottom: calc(var(--scp-bar-h)+20px);
+    bottom: 100%;
     border-radius: 0;
     overflow-y: auto;
   }
@@ -650,13 +649,13 @@ a.sc-player__title:hover {
   }
 
   .sc-player__playlists {
-    left: 0;
+    left: 20px;
     right: auto;
     width: 300px;
   }
 
   .sc-player__tracks {
-    right: 0;
+    right: 20px;
     left: auto;
     width: 300px;
   }
