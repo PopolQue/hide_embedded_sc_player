@@ -2,8 +2,9 @@ import React, { useRef, useState, useEffect, useCallback, useMemo, useLayoutEffe
 import type { SCPlayerProps, SCWidget } from './types.ts'
 import { usePlayer } from './PlayerContext.tsx'
 import './SCPlayer.css'
-import logoBigWhite from './assets/sc-logo_big_white.png'
-import logoSmall from './assets/sc-logo.png'
+
+import desktopLogo from './images/sc-logo-desktop.png'
+import mobileLogo from './images/sc-logo-mobile.png'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -266,7 +267,7 @@ export function SCPlayer({
 
     // Update browser tab title when playing
     useEffect(() => {
-        const baseTitle = "Klein und Haarig"
+        const baseTitle = "Hidden SoundCloud Player"
         if (isPlaying && activeTrack) {
             document.title = `▶ ${activeTrack.title} | ${baseTitle}`
         } else {
@@ -835,10 +836,9 @@ export function SCPlayer({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="sc-player__logo"
+                            style={{ backgroundImage: `url(${desktopLogo})` }}
                             aria-label="Visit our SoundCloud"
-                        >
-                            <img src={logoBigWhite} alt="SoundCloud" />
-                        </a>
+                        ></a>
                     </div>
                 </div>
                 {/* End of sc-player__bar-desktop */}
@@ -887,9 +887,13 @@ export function SCPlayer({
                                 ) : <IconMusic />}
                             </div>
                             {/* Logo */}
-                            <a href={scAccountUrl} target="_blank" rel="noopener noreferrer" className="sc-player__logo">
-                                <img src={logoSmall} alt="SoundCloud" />
-                            </a>
+                            <a 
+                                href={scAccountUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="sc-player__logo sc-player__logo--mobile"
+                                style={{ backgroundImage: `url(${mobileLogo})` }}
+                            ></a>
 
                             <button type="button" className="sc-player__btn" onClick={playRandomTrack}><IconShuffle /></button>
                         </div>

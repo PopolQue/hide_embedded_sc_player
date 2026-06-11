@@ -4,21 +4,16 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  root: '.',
-  publicDir: false,
+  root: 'src/demo',
+  publicDir: resolve(__dirname, 'public'),
   base: '/',
   server: {
-    open: '/docs/index.html',
+    open: '/',
     port: 3000,
     allowedHosts: "crescentlike-florencio-nonrustic.ngrok-free.dev",
   },
   build: {
-    outDir: 'dist-demo',
+    outDir: resolve(__dirname, 'dist-demo'),
     emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        demo: resolve(__dirname, 'src/demo/index.html'),
-      },
-    },
   },
 })

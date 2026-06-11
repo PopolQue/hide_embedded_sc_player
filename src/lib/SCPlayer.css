@@ -594,7 +594,6 @@ a.sc-player__title:hover {
   .sc-player__artwork,
   .sc-player__logo {
     flex-shrink: 0;
-    margin-left: 8px;
   }
 
   .sc-player__artwork {
@@ -624,7 +623,7 @@ a.sc-player__title:hover {
     right: 0;
     left: auto;
     top: auto;
-    bottom: calc(105px + 20px);
+    bottom: calc(var(--scp-bar-h)+20px);
     border-radius: 0;
     overflow-y: auto;
   }
@@ -726,3 +725,5 @@ a.sc-player__title:hover {
 .sc-player button:not(.scp-play-button) {
   --hover-color: transparent !important;
 }
+
+

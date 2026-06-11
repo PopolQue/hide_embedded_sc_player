@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build --config vite.lib.config.ts",
+    "build": "tsc --noEmit && vite build --config vite.lib.config.ts && vite build",
     "build:demo": "vite build"
   },
   "peerDependencies": {
