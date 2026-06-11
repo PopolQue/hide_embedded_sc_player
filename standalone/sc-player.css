@@ -1,19 +1,18 @@
-/* ── SCPlayer CSS ──────────────────────────────────────────────────
+/* ── SCPlayer CSS (Standalone) ────────────────────────────────────
    Fully themeable via CSS custom properties (--scp-*)
-   See README.md for all variables and defaults.
 ────────────────────────────────────────────────────────────────── */
 
 .sc-player {
   --scp-bg: #1a1a24;
-  --scp-border: #333842;
+  --scp-border: #1a1a24;
   --scp-text: #d1d1d1de;
-  --scp-muted: #9ca3af;
-  --scp-accent: #1a1a1a;
-  --scp-accent-hover: #000000;
-  --scp-active-bg: rgba(62, 62, 62, 0.15);
-  --scp-list-bg: #0c0c0c;
+  --scp-muted: #d1d1d1de;
+  --scp-accent: #d1d1d1de;
+  --scp-accent-hover: #d1d1d1de;
+  --scp-active-bg: #1a1a24;
+  --scp-list-bg: #1a1a24;
   --scp-bar-h: 64px;
-  --scp-radius: 4px;
+  --scp-radius: 12px;
   --scp-font: Inter, system-ui, sans-serif;
 
   font-family: var(--scp-font);
@@ -22,8 +21,8 @@
 /* Hidden iframe */
 .sc-player__iframe {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: 10px;
+  height: 10px;
   opacity: 0;
   pointer-events: none;
   clip: rect(0, 0, 0, 0);
@@ -37,7 +36,6 @@
   z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 16px;
   padding: 0 20px;
   height: var(--scp-bar-h);
   background: var(--scp-bg);
@@ -60,7 +58,6 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
-  flex: 1;
 }
 
 .sc-player__artwork {
@@ -77,24 +74,16 @@
   object-fit: cover;
 }
 
-.sc-player__artwork-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #515151, #1a1a1a);
-  color: #fff;
-  font-size: 18px;
-}
-
 .sc-player__text {
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .sc-player__title {
   color: var(--scp-text);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -103,7 +92,7 @@
 
 .sc-player__artist {
   color: var(--scp-muted);
-  font-size: 13px;
+  font-size: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -121,93 +110,53 @@
   border: none;
   color: var(--scp-text);
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 6px;
   border-radius: 50%;
   font-size: 16px;
   transition: background 0.2s;
-}
-
-.sc-player__btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.sc-player__btn--play {
-  background: var(--scp-accent) !important;
-  width: 36px;
-  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.sc-player__btn--play:hover {
-  background: var(--scp-accent-hover) !important;
-}
-
-.sc-player__select {
-  background: rgba(38, 38, 38, 0.1);
-  color: var(--scp-text);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: var(--scp-radius);
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  font-family: var(--scp-font);
-}
-
-.sc-player__select option {
-  background: var(--scp-bg);
-  color: var(--scp-text);
+.sc-player__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ── Progress Bar ──────────────────────────────────────────────── */
-.sc-player__progress {
+.sc-player__progress-container {
   flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+
+.sc-player__progress-input {
+  width: 100%;
   height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
   background: rgba(187, 187, 187, 0.1);
   border-radius: 2px;
+  outline: none;
   cursor: pointer;
-  position: relative;
-}
-
-.sc-player__progress-fill {
-  height: 100%;
-  background: var(--scp-accent);
-  border-radius: 2px;
-  transition: width 0.1s;
-}
-
-/* ── Track List Button ─────────────────────────────────────────── */
-.sc-player__tracks-btn {
-  background: none;
   border: none;
-  color: var(--scp-muted);
-  cursor: pointer;
-  font-size: 13px;
-  padding: 6px 8px;
-  font-family: var(--scp-font);
-  white-space: nowrap;
-}
-
-.sc-player__tracks-btn:hover {
-  color: var(--scp-text);
 }
 
 /* ── Track List Dropdown ───────────────────────────────────────── */
 .sc-player__tracks {
   position: fixed;
   right: 0;
-  bottom: var(--scp-bar-h);
-  width: 340px;
-  max-height: 400px;
+  bottom: calc(var(--scp-bar-h));
+  width: 300px;
+  max-height: 390px;
   background: var(--scp-list-bg);
   border: 1px solid var(--scp-border);
   border-bottom: none;
-  border-radius: 8px 0 0 0;
+  border-radius: 0;
   overflow-y: auto;
   z-index: 9998;
-
-  /* Standalone variant: toggle visibility via class */
   display: none;
 }
 
@@ -223,110 +172,20 @@
   padding: 10px 14px;
   background: none;
   border: none;
-  color: var(--scp-text);
+  border-bottom: 1px solid var(--scp-border);
+  color: var(--scp-bg);
   cursor: pointer;
   text-align: left;
   transition: background 0.2s;
   font-family: var(--scp-font);
+  background-color: var(--scp-text);
 }
 
-.sc-player__track:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.sc-player__track.active {
-  background: var(--scp-active-bg);
-}
-
-.sc-player__track-num {
-  color: var(--scp-muted);
-  font-size: 12px;
-  min-width: 20px;
-  text-align: center;
-}
-
-.sc-player__track-title {
-  flex: 1;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sc-player__track-dur {
-  color: var(--scp-muted);
-  font-size: 11px;
-}
-
-.sc-player__playing {
-  color: var(--scp-accent);
-  animation: scp-pulse 0.8s ease-in-out infinite;
-}
-
-@keyframes scp-pulse {
-
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
-
-/* ── SoundCloud Logo ───────────────────────────────────────────── */
-.sc-player__logo {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  transition: opacity 0.2s;
-  height: 24px;
-}
-
-.sc-player__logo:hover {
-  opacity: 0.8;
-}
-
-.sc-player__logo img {
-  height: 100%;
-  width: auto;
-  display: block;
-}
-
-/* ── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .sc-player__bar {
-    padding: 0 12px;
-    height: 56px;
-    gap: 8px;
-  }
-
-  .sc-player__progress {
-    display: none;
-  }
-
-  .sc-player__select {
-    max-width: 80px;
-  }
-
-  .sc-player__tracks {
-    width: 100%;
-    right: 0;
-    left: 0;
-    border-radius: 0;
-  }
-
-  .sc-player__tracks--open {
-    width: 100%;
-    left: 0;
-    right: 0;
-  }
+.sc-player__track:last-child {
+  border-bottom: none;
 }
 
 /* ── Utility ───────────────────────────────────────────────────── */
-
-/* Screen reader only — visually hidden but accessible to AT */
 .sc-player__sr-only {
   position: absolute;
   width: 1px;
@@ -337,20 +196,4 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-/* Error state banner */
-.sc-player__error {
-  position: fixed;
-  bottom: calc(var(--scp-bar-h) + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #271212;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: var(--scp-radius);
-  font-size: 13px;
-  z-index: 10000;
-  max-width: 90vw;
-  text-align: center;
 }
