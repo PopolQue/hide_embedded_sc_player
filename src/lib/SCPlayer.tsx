@@ -1,106 +1,109 @@
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-import type { SCPlayerProps, SCWidget } from './types'
-import scLogo from './assets/sc-logo.png'
+import React, { useRef, useState, useEffect, useCallback, useMemo, useLayoutEffect } from 'react'
+import type { SCPlayerProps, SCWidget } from './types.ts'
+import { usePlayer } from './PlayerContext.tsx'
 import './SCPlayer.css'
+import logoBigWhite from './assets/sc-logo_big_white.png'
+import logoSmall from './assets/sc-logo.png'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /** Format milliseconds to human-readable time string (e.g. "3:45" or "1:02:30") */
 function formatTime(ms: number): string {
-  if (!ms || Number.isNaN(ms) || ms <= 0) return '0:00'
-  const totalSeconds = Math.floor(ms / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-  }
-  return `${minutes}:${String(seconds).padStart(2, '0')}`
+    if (!ms || Number.isNaN(ms) || ms <= 0) return '0:00'
+    const totalSeconds = Math.floor(ms / 1000)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    }
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
 }
-
-/** Default theme values — matches CSS custom property defaults */
-const DEFAULT_THEME = {
-  bg: '#1d1d1d',
-  border: '#505050',
-  text: '#e7e7e7de',
-  muted: '#9ca3af',
-  accent: '#1a1a1a',
-  accentHover: '#000000',
-  activeBg: 'rgba(52, 52, 52, 0.15)',
-  listBg: '#101010',
-  barHeight: '64px',
-  borderRadius: '4px',
-  fontFamily: 'Inter, system-ui, sans-serif',
-} as const
 
 // ── SVG Icons (inline, no external dependencies) ─────────────────────
 
 function IconPlay() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  )
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+        </svg>
+    )
 }
 
 function IconPause() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
-      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-    </svg>
-  )
-}
-
-function IconPrev() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-      <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-    </svg>
-  )
-}
-
-function IconNext() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-      <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-    </svg>
-  )
-}
-
-function IconMusic() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
-      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-    </svg>
-  )
-}
-
-function IconClose() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
-      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-    </svg>
-  )
-}
-
-function IconVolume({ volume }: { volume: number }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
-      {volume === 0 ? (
-        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-      ) : (
-        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-      )}
-    </svg>
-  )
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+        </svg>
+    )
 }
 
 function IconShuffle({ color }: { color?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill={color || "currentColor"} width="16" height="16" aria-hidden="true">
-      <path d="M14.83,13.41L13.42,14.82L16.55,17.95L14.5,20H20V14.5L17.96,16.54L14.83,13.41M14.5,4L16.54,6.04L4,18.58L5.41,20L17.96,7.46L20,9.5V4H14.5M10.59,9.17L5.41,4L4,5.41L9.17,10.58L10.59,9.17Z" />
-    </svg>
-  )
+    return (
+        <svg viewBox="0 0 24 24" fill={color || "currentColor"} width="16" height="16" aria-hidden="true">
+            <path d="M14.83,13.41L13.42,14.82L16.55,17.95L14.5,20H20V14.5L17.96,16.54L14.83,13.41M14.5,4L16.54,6.04L4,18.58L5.41,20L17.96,7.46L20,9.5V4H14.5M10.59,9.17L5.41,4L4,5.41L9.17,10.58L10.59,9.17Z" />
+        </svg>
+    )
+}
+
+function IconMusic() {
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+        </svg>
+    )
+}
+
+function IconVolume({ volume }: { volume: number }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
+            {volume === 0 ? (
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+            ) : (
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+            )}
+        </svg>
+    )
+}
+
+function IconClose({ size = 16, color = "currentColor" }: { size?: number, color?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill={color} width={size} height={size} aria-hidden="true">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+        </svg>
+    )
+}
+
+function IconChevronLeft({ size = 16, color = "currentColor" }: { size?: number, color?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill={color} width={size} height={size} aria-hidden="true">
+            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+        </svg>
+    )
+}
+
+function IconChevronRight({ size = 16, color = "currentColor" }: { size?: number, color?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill={color} width={size} height={size} aria-hidden="true">
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+        </svg>
+    )
+}
+
+function IconDropdown({ size = 16, color = "currentColor" }: { size?: number, color?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill={color} width={size} height={size} aria-hidden="true">
+            <path d="M7 10l5 5 5-5z" />
+        </svg>
+    )
+}
+
+function IconBurgerMenu({ size = 16, color = "currentColor" }: { size?: number, color?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill={color} width={size} height={size} aria-hidden="true">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+        </svg>
+    )
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -112,836 +115,902 @@ function IconShuffle({ color }: { color?: string }) {
  * 
  * @param props - Configuration and theme options for the player.
  */
-export default function SCPlayer({
-  playlists,
-  defaultPlaylist,
-  scEmbedUrl,
-  scAccountUrl = 'https://soundcloud.com/kleinundhaarig',
-  position = 'bottom',
-  showPlaylistSelect = true,
-  showTrackList = true,
-  showProgress = true,
-  showNavButtons = true,
-  autoplayOnSelect = true,
-  autoplayDelay = 500,
-  persist = true,
-  storageKey = 'scp-state',
-  theme = {},
-  className = '',
+export function SCPlayer({
+    playlists,
+    defaultPlaylist,
+    scEmbedUrl,
+    scAccountUrl = 'https://soundcloud.com/kleinundhaarig',
+    position = 'bottom',
+    showPlaylistSelect = true,
+    showTrackList = true,
+    showProgress = true,
+    showNavButtons = true,
+    autoplayOnSelect = true,
+    autoplayDelay = 500,
+    theme = {},
+    className = '',
 }: SCPlayerProps) {
-  /** Reference to the hidden SoundCloud iframe required by the Widget API */
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  /** Reference to the initialized SoundCloud Widget instance */
-  const widgetRef = useRef<SCWidget | null>(null)
-  /** Timer used for polling playback progress from the widget */
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  /** Timer used for delaying duration updates to prevent progress bar flickering */
-  const durationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const {
+        isPlaying, setIsPlaying,
+        activePlaylistKey, setActivePlaylistKey,
+        activeTrackIndex, setActiveTrackIndex,
+        progress, setProgress,
+        volume, setVolume
+    } = usePlayer();
 
-  /** 
-   * Retrieves the persisted player state from localStorage.
-   * Runs only during initialization to restore the user's last session.
-   */
-  const getInitialState = useCallback(() => {
-    if (!persist) return null
-    try {
-      const saved = localStorage.getItem(storageKey)
-      if (!saved) return null
+    const getPlaylistLabel = (label: string) => label.replace(/KuH/gi, '').trim();
 
-      const state = JSON.parse(saved)
-      const EXPIRATION_TIME = 12 * 60 * 60 * 1000 // 12 hours
+    /** Reference to the hidden SoundCloud iframe required by the Widget API */
+    const iframeRef = useRef<HTMLIFrameElement>(null)
+    /** Reference to the initialized SoundCloud Widget instance */
+    const widgetRef = useRef<SCWidget | null>(null)
+    /** Timer used for polling playback progress from the widget */
+    const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    /** Timer used for delaying duration updates to prevent progress bar flickering */
+    const durationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-      if (state.ts && Date.now() - state.ts > EXPIRATION_TIME) {
-        return null
-      }
+    // ── Local State (non-playback state) ──────────────────────────────────
+    /** Key identifying the playlist currently being browsed in the track list */
+    const [browsingPlaylistKey, setBrowsingPlaylistKey] = useState(activePlaylistKey)
+    /** Whether the volume slider is visible */
+    const [showVolumeSlider, setShowVolumeSlider] = useState(false)
+    /** Whether the track list slide-up panel is visible */
+    const [showTracks, setShowTracks] = useState(false)
+    /** Whether the playlist menu is visible */
+    const [showPlaylists, setShowPlaylists] = useState(false)
+    /** Whether the SoundCloud Widget API has successfully initialized */
+    const [widgetReady, setWidgetReady] = useState(false)
+    /** Whether an error occurred while loading the widget or tracks */
+    const [widgetError, setWidgetError] = useState(false)
+    /** Whether the external SoundCloud Widget script has been loaded into the DOM */
+    const [scriptLoaded, setScriptLoaded] = useState(() => !!window.SC?.Widget)
 
-      return state
-    } catch {
-      return null
-    }
-  }, [persist, storageKey])
+    // Restore volume logic
+    const lastVolumeRef = useRef(volume > 0 ? volume : 100)
+    
+    const playlistKeys = Object.keys(playlists)
+    const volumeRef = useRef<HTMLDivElement>(null)
+    const isDraggingRef = useRef(false)
+    const rowRef = useRef<HTMLDivElement>(null);
+    const innerRef = useRef<HTMLDivElement>(null);
+    const [isOverflowing, setIsOverflowing] = useState(false);
 
-  const initialState = useMemo(() => getInitialState(), [getInitialState])
+    const browsingPlaylist = playlists[browsingPlaylistKey]
+    const browsingTracks = browsingPlaylist?.tracks ?? []
 
-  // ── State ──────────────────────────────────────────────────────────
+    const activePlaylist = playlists[activePlaylistKey]
+    const activeTracks = activePlaylist?.tracks ?? []
+    const activeTrack = activeTracks[activeTrackIndex] ?? null
 
-  /** Whether audio is currently playing */
-  const [isPlaying, setIsPlaying] = useState(false)
-  /** Whether tracks should be played in random order */
-  const [isShuffle, setIsShuffle] = useState(false)
+    const [duration, setDuration] = useState(() => {
+        const pl = playlists[activePlaylistKey]
+        const tr = pl?.tracks?.[activeTrackIndex]
+        return tr?.duration ?? 0
+    })
 
-  /** Key identifying the playlist currently being browsed in the track list */
-  const [browsingPlaylistKey, setBrowsingPlaylistKey] = useState(() => {
-    if (initialState?.playlist && playlists[initialState.playlist]) {
-      return initialState.playlist
-    }
-
-    // Pick a random playlist if no valid state
-    const keys = Object.keys(playlists)
-    return keys[Math.floor(Math.random() * keys.length)]
-  })
-
-  /** Key identifying the playlist that contains the currently playing track */
-  const [activePlaylistKey, setActivePlaylistKey] = useState(browsingPlaylistKey)
-
-  /** Zero-based index of the track currently playing within the active playlist */
-  const [activeTrackIndex, setActiveTrackIndex] = useState(() => {
-    if (initialState?.index !== undefined && initialState.index !== null) {
-      return initialState.index
-    }
-
-    // Pick a random track from the selected playlist
-    const tracks = playlists[activePlaylistKey]?.tracks || []
-    return tracks.length > 0 ? Math.floor(Math.random() * tracks.length) : 0
-  })
-
-  /** Current playback position in milliseconds */
-  const [progress, setProgress] = useState(initialState?.progress ?? 0)
-  /** Total duration of the current track in milliseconds */
-  const [duration, setDuration] = useState(() => {
-    const pl = playlists[activePlaylistKey]
-    const tr = pl?.tracks?.[activeTrackIndex]
-    return tr?.duration ?? 0
-  })
-  /** Current player volume (0 to 100) */
-  const [volume, setVolume] = useState(() => {
-    if (initialState?.volume !== undefined) return initialState.volume
-    return 100
-  })
-  /** Store last non-zero volume for unmuting */
-  const lastVolumeRef = useRef(volume > 0 ? volume : 100)
-  /** Whether the volume slider is visible */
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
-  /** Whether the track list slide-up panel is visible */
-  const [showTracks, setShowTracks] = useState(false)
-  /** Whether the SoundCloud Widget API has successfully initialized */
-  const [widgetReady, setWidgetReady] = useState(false)
-  /** Whether the user is currently dragging the progress slider */
-  const [isDragging, setIsDragging] = useState(false)
-  /** Whether an error occurred while loading the widget or tracks */
-  const [widgetError, setWidgetError] = useState(false)
-  /** Whether the external SoundCloud Widget script has been loaded into the DOM */
-  const [scriptLoaded, setScriptLoaded] = useState(() => !!window.SC?.Widget)
-
-  const playlistKeys = Object.keys(playlists)
-  const volumeRef = useRef<HTMLDivElement>(null)
-  const isDraggingRef = useRef(false)
-
-  // Close volume slider when clicking outside
-  useEffect(() => {
-    if (!showVolumeSlider) return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (volumeRef.current && !volumeRef.current.contains(event.target as Node)) {
-        setShowVolumeSlider(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showVolumeSlider])
-
-  // 1. Resolve SoundCloud Embed URL
-  const resolvedEmbedUrl = useMemo(() => {
-    if (scEmbedUrl) return scEmbedUrl
-
-    const firstKey = defaultPlaylist || playlistKeys[0]
-    const pl = playlists[firstKey]
-    if (!pl?.playlistId) return ''
-
-    // Extract numeric ID from "soundcloud:playlists:123456" or just use the ID
-    const idMatch = pl.playlistId.match(/\d+$/)
-    const numericId = idMatch ? idMatch[0] : pl.playlistId
-
-    return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/${numericId}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true`
-  }, [scEmbedUrl, defaultPlaylist, playlistKeys, playlists])
-
-  // 2. Automate SoundCloud API Script Injection
-  useEffect(() => {
-    if (window.SC?.Widget) {
-      setScriptLoaded(true)
-      return
-    }
-
-    const scriptId = 'sc-widget-api-script'
-    if (document.getElementById(scriptId)) return
-
-    const script = document.createElement('script')
-    script.id = scriptId
-    script.src = 'https://w.soundcloud.com/player/api.js'
-    script.async = true
-    script.onload = () => setScriptLoaded(true)
-    script.onerror = () => setWidgetError(true)
-    document.head.appendChild(script)
-  }, [])
-
-  const browsingPlaylist = playlists[browsingPlaylistKey]
-  const browsingTracks = browsingPlaylist?.tracks ?? []
-
-  const activePlaylist = playlists[activePlaylistKey]
-  const activeTracks = activePlaylist?.tracks ?? []
-  const activeTrack = activeTracks[activeTrackIndex] ?? null
-
-  // Refs for event handlers to avoid stale closures
-  const tracksRef = useRef(activeTracks)
-  const indexRef = useRef(activeTrackIndex)
-  const activePlaylistKeyRef = useRef(activePlaylistKey)
-
-  useEffect(() => {
-    tracksRef.current = activeTracks
-  }, [activeTracks])
-
-  useEffect(() => {
-    indexRef.current = activeTrackIndex
-  }, [activeTrackIndex])
-
-  useEffect(() => {
-    activePlaylistKeyRef.current = activePlaylistKey
-  }, [activePlaylistKey])
-
-  // Save state to storage
-  useEffect(() => {
-    if (!persist) return
-    const state = {
-      playlist: activePlaylistKey,
-      index: activeTrackIndex,
-      progress: progress,
-      volume: volume,
-      ts: Date.now(),
-    }
-    localStorage.setItem(storageKey, JSON.stringify(state))
-  }, [activePlaylistKey, activeTrackIndex, progress, volume, persist, storageKey])
-
-  // Update browser tab title when playing
-  useEffect(() => {
-    const baseTitle = "Klein und Haarig"
-    if (isPlaying && activeTrack) {
-      document.title = `▶ ${activeTrack.title} | ${baseTitle}`
-    } else {
-      document.title = baseTitle
-    }
-
-    return () => {
-      document.title = baseTitle
-    }
-  }, [isPlaying, activeTrack])
-
-  // Sync volume with widget
-  useEffect(() => {
-    if (widgetReady && widgetRef.current) {
-      try {
-        widgetRef.current.setVolume(volume / 100)
-      } catch (err) {
-        console.error('Error setting volume:', err)
-      }
-    }
-  }, [widgetReady, volume])
-
-  // Resolve theme to CSS custom properties
-  const cssVars = useMemo<React.CSSProperties>(() => {
-    const t = { ...DEFAULT_THEME, ...theme }
-    return {
-      '--scp-bg': t.bg,
-      '--scp-border': t.border,
-      '--scp-text': t.text,
-      '--scp-muted': t.muted,
-      '--scp-accent': t.accent,
-      '--scp-accent-hover': t.accentHover,
-      '--scp-active-bg': t.activeBg,
-      '--scp-list-bg': t.listBg,
-      '--scp-bar-h': t.barHeight,
-      '--scp-radius': t.borderRadius,
-      '--scp-font': t.fontFamily,
-    } as React.CSSProperties
-  }, [theme])
-
-  // 3. Initialize SoundCloud widget
-  useEffect(() => {
-    if (!scriptLoaded || !iframeRef.current || !window.SC?.Widget) {
-      return
-    }
-
-    setWidgetError(false)
-    try {
-      widgetRef.current = new window.SC.Widget(iframeRef.current)
-    } catch {
-      setWidgetError(true)
-      return
-    }
-
-    const widget = widgetRef.current
-
-    // Event handlers
-    const handleReady = () => {
-      setWidgetReady(true)
-
-      // If we have a persisted track/progress, load it
-      if (initialState && activeTrack?.permalink_url) {
-        widget.load(activeTrack.permalink_url, { autoPlay: false })
-        if (initialState.progress > 0) {
-          widget.seekTo(initialState.progress)
-        }
-      }
-
-      widget.isPaused((paused) => setIsPlaying(!paused))
-    }
-
-    const handlePlay = () => setIsPlaying(true)
-    const handlePause = () => setIsPlaying(false)
-
-    const handleSoundChange = () => {
-      widget.getCurrentSound((sound) => {
-        if (sound) {
-          // Find the track in our local metadata to keep UI in sync
-          const tracks = tracksRef.current
-          const idx = tracks.findIndex((t) => t.id === sound.id)
-          if (idx >= 0) {
-            setActiveTrackIndex(idx)
-            // Prioritize local duration metadata if available
-            if (tracks[idx].duration) {
-              setDuration(tracks[idx].duration)
-              return
+    useLayoutEffect(() => {
+        const checkOverflow = () => {
+            if (rowRef.current && innerRef.current) {
+                setIsOverflowing(innerRef.current.scrollWidth > rowRef.current.clientWidth);
             }
-          }
-          // Fallback to widget duration
-          widget.getDuration((d) => setDuration(d))
+        };
+        checkOverflow();
+        window.addEventListener('resize', checkOverflow);
+        return () => window.removeEventListener('resize', checkOverflow);
+    }, [activeTrack, browsingPlaylistKey]);
+
+    // Close volume slider when clicking outside
+    useEffect(() => {
+        if (!showVolumeSlider) return
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (volumeRef.current && !volumeRef.current.contains(event.target as Node)) {
+                setShowVolumeSlider(false)
+            }
         }
-      })
-    }
 
-    const handleFinish = () => {
-      const tracks = tracksRef.current
-      const idx = indexRef.current
-      if (idx < tracks.length - 1) {
-        const nextIdx = idx + 1
-        const track = tracks[nextIdx]
-        if (track?.permalink_url) {
-          setActiveTrackIndex(nextIdx)
-          if (track.duration) setDuration(track.duration)
-          widget.load(track.permalink_url, { autoPlay: true })
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showVolumeSlider])
+
+    // 1. Resolve SoundCloud Embed URL
+    const resolvedEmbedUrl = useMemo(() => {
+        if (scEmbedUrl) return scEmbedUrl
+
+        const firstKey = defaultPlaylist || playlistKeys[0]
+        const pl = playlists[firstKey]
+        if (!pl?.playlistId) return ''
+
+        // Extract numeric ID from "soundcloud:playlists:123456" or just use the ID
+        const idMatch = pl.playlistId.match(/\d+$/)
+        const numericId = idMatch ? idMatch[0] : pl.playlistId
+
+        return `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/${numericId}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=true`
+    }, [scEmbedUrl, defaultPlaylist, playlistKeys, playlists])
+
+    // 2. Automate SoundCloud API Script Injection
+    useEffect(() => {
+        if (window.SC?.Widget) {
+            setScriptLoaded(true)
+            return
         }
-      }
-    }
 
-    const handleError = () => {
-      setWidgetError(true)
-    }
+        const scriptId = 'sc-widget-api-script'
+        if (document.getElementById(scriptId)) return
 
-    const events = window.SC.Widget.Events
-    widget.bind(events.READY, handleReady)
-    widget.bind(events.PLAY, handlePlay)
-    widget.bind(events.PAUSE, handlePause)
-    widget.bind(events.SOUND_CHANGE, handleSoundChange)
-    widget.bind(events.FINISH, handleFinish)
-    widget.bind(events.ERROR, handleError)
+        const script = document.createElement('script')
+        script.id = scriptId
+        script.src = 'https://w.soundcloud.com/player/api.js'
+        script.async = true
+        script.onload = () => setScriptLoaded(true)
+        script.onerror = () => setWidgetError(true)
+        document.head.appendChild(script)
+    }, [])
 
-    return () => {
-      try {
-        widget.unbind(events.READY)
-        widget.unbind(events.PLAY)
-        widget.unbind(events.PAUSE)
-        widget.unbind(events.SOUND_CHANGE)
-        widget.unbind(events.FINISH)
-        widget.unbind(events.ERROR)
-      } catch {
-        // Widget may already be destroyed
-      }
-    }
-  }, [resolvedEmbedUrl, scriptLoaded, initialState])
+    // Refs for event handlers to avoid stale closures
+    const tracksRef = useRef(activeTracks)
+    const indexRef = useRef(activeTrackIndex)
+    const activePlaylistKeyRef = useRef(activePlaylistKey)
 
-  // Progress polling
-  useEffect(() => {
-    if (!widgetReady || !widgetRef.current) return
+    useEffect(() => {
+        tracksRef.current = activeTracks
+    }, [activeTracks])
 
-    progressTimerRef.current = setInterval(() => {
-      widgetRef.current?.getPosition((pos) => {
-        if (!isDraggingRef.current) {
-          setProgress(pos)
+    useEffect(() => {
+        indexRef.current = activeTrackIndex
+    }, [activeTrackIndex])
+
+    useEffect(() => {
+        activePlaylistKeyRef.current = activePlaylistKey
+    }, [activePlaylistKey])
+
+    // Update browser tab title when playing
+    useEffect(() => {
+        const baseTitle = "Klein und Haarig"
+        if (isPlaying && activeTrack) {
+            document.title = `▶ ${activeTrack.title} | ${baseTitle}`
+        } else {
+            document.title = baseTitle
         }
-      })
-    }, 500)
 
-    return () => {
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current)
-        progressTimerRef.current = null
-      }
-    }
-  }, [widgetReady])
+        return () => {
+            document.title = baseTitle
+        }
+    }, [isPlaying, activeTrack])
 
-  // Sync duration with current track metadata
-  useEffect(() => {
-    if (activeTrack?.duration) {
-      setDuration(activeTrack.duration)
-    }
-  }, [activeTrack])
+    // Sync volume with widget
+    useEffect(() => {
+        if (widgetReady && widgetRef.current) {
+            try {
+                widgetRef.current.setVolume(volume)
+            } catch (err) {
+                console.error('Error setting volume:', err)
+            }
+        }
+    }, [widgetReady, volume])
 
-  // Navigate to a specific track
-  const navigateToTrack = useCallback(
-    (index: number) => {
-      const track = browsingTracks[index]
-      if (!track?.permalink_url || !widgetRef.current) return
+    // Resolve theme to CSS custom properties
+    const cssVars = useMemo(() => {
+        const vars: Record<string, string> = {}
+        if (theme.bg) vars['--scp-bg'] = theme.bg
+        if (theme.border) vars['--scp-border'] = theme.border
+        if (theme.text) vars['--scp-text'] = theme.text
+        if (theme.muted) vars['--scp-muted'] = theme.muted
+        if (theme.accent) vars['--scp-accent'] = theme.accent
+        if (theme.accentHover) vars['--scp-accent-hover'] = theme.accentHover
+        if (theme.activeBg) vars['--scp-active-bg'] = theme.activeBg
+        if (theme.listBg) vars['--scp-list-bg'] = theme.listBg
+        if (theme.barHeight) vars['--scp-bar-h'] = theme.barHeight
+        if (theme.borderRadius) vars['--scp-radius'] = theme.borderRadius
+        if (theme.fontFamily) vars['--scp-font'] = theme.fontFamily
+        return vars as React.CSSProperties
+    }, [theme])
 
-      setActivePlaylistKey(browsingPlaylistKey)
-      setActiveTrackIndex(index)
-      if (track.duration) setDuration(track.duration)
+    // 3. Initialize SoundCloud widget
+    useEffect(() => {
+        if (!scriptLoaded || !iframeRef.current || !window.SC?.Widget) {
+            return
+        }
 
-      try {
-        widgetRef.current.load(track.permalink_url, {
-          autoPlay: autoplayOnSelect
-        })
-      } catch {
-        return
-      }
-
-      setShowTracks(false)
-    },
-    [browsingTracks, browsingPlaylistKey, autoplayOnSelect]
-  )
-
-  // Toggle play/pause
-  const togglePlay = useCallback(() => {
-    try {
-      widgetRef.current?.toggle()
-    } catch {
-      // Widget not ready
-    }
-  }, [])
-
-  // Previous track
-  const prevTrack = useCallback(() => {
-    if (activeTrackIndex > 0) {
-      const prevIdx = activeTrackIndex - 1
-      const track = activeTracks[prevIdx]
-      if (!track?.permalink_url || !widgetRef.current) return
-
-      setActiveTrackIndex(prevIdx)
-      if (track.duration) setDuration(track.duration)
-      try {
-        widgetRef.current.load(track.permalink_url, { autoPlay: true })
-      } catch {}
-    } else {
-      try {
-        widgetRef.current?.prev()
-      } catch {
-        // Widget not ready
-      }
-    }
-  }, [activeTrackIndex, activeTracks])
-
-  // Next track
-  const nextTrack = useCallback(() => {
-    let nextIdx = activeTrackIndex + 1
-
-    if (isShuffle && activeTracks.length > 1) {
-      // Pick a random index that isn't the current one
-      nextIdx = Math.floor(Math.random() * activeTracks.length)
-      if (nextIdx === activeTrackIndex) {
-        nextIdx = (nextIdx + 1) % activeTracks.length
-      }
-    }
-
-    if (nextIdx < activeTracks.length) {
-      const track = activeTracks[nextIdx]
-      if (!track?.permalink_url || !widgetRef.current) return
-
-      setActiveTrackIndex(nextIdx)
-      if (track.duration) setDuration(track.duration)
-      try {
-        widgetRef.current.load(track.permalink_url, { autoPlay: true })
-      } catch {}
-    } else {
-      try {
-        widgetRef.current?.next()
-      } catch {
-        // Widget not ready
-      }
-    }
-  }, [activeTrackIndex, activeTracks, isShuffle])
-
-  // Seek within current track
-  const handleSeek = useCallback(
-    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-      if (!widgetRef.current || !duration) return
-      const rect = e.currentTarget.getBoundingClientRect()
-      const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX
-      const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-      const targetPos = duration * pct
-
-      setProgress(targetPos)
-      if (!isDraggingRef.current) {
+        setWidgetError(false)
         try {
-          widgetRef.current.seekTo(targetPos)
-        } catch {}
-      }
-    },
-    [duration]
-  )
-
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    isDraggingRef.current = true
-    setIsDragging(true)
-    handleSeek(e)
-  }, [handleSeek])
-
-  useEffect(() => {
-    if (!isDragging) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingRef.current || !duration) return
-      // We need a ref to the progress bar element to get its rect
-      const progressBar = document.querySelector('.sc-player__progress')
-      if (!progressBar) return
-      const rect = progressBar.getBoundingClientRect()
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-      setProgress(duration * pct)
-    }
-
-    const handleMouseUp = (e: MouseEvent) => {
-      if (isDraggingRef.current && widgetRef.current && duration) {
-        const progressBar = document.querySelector('.sc-player__progress')
-        if (progressBar) {
-          const rect = progressBar.getBoundingClientRect()
-          const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-          widgetRef.current.seekTo(duration * pct)
+            widgetRef.current = new window.SC.Widget(iframeRef.current)
+        } catch {
+            setWidgetError(true)
+            return
         }
-      }
-      isDraggingRef.current = false
-      setIsDragging(false)
-    }
 
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [isDragging, duration])
+        const widget = widgetRef.current
 
-  // Playlist change handler
-  const handlePlaylistChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setBrowsingPlaylistKey(e.target.value)
-    },
-    []
-  )
+        // Event handlers
+        const handleReady = () => {
+            setWidgetReady(true)
 
-  const toggleMute = useCallback(() => {
-    if (volume > 0) {
-      lastVolumeRef.current = volume
-      setVolume(0)
-    } else {
-      setVolume(lastVolumeRef.current)
-    }
-  }, [volume])
+            // Always load the individual track URL to ensure single-track mode and correct duration scaling
+            if (activeTrack?.permalink_url) {
+                widget.load(activeTrack.permalink_url, { autoPlay: false })
+            }
 
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(Number(e.target.value))
-  }, [])
+            widget.isPaused((paused) => setIsPlaying(!paused))
+        }
 
-  // Computed values
-  const progressPct = duration > 0 ? (progress / duration) * 100 : 0
-  const artworkUrl = activeTrack?.artwork_url
-    ? activeTrack.artwork_url.replace('-large', '-t500x500')
-    : null
+        const handlePlay = () => {
+            setIsPlaying(true)
+        }
+        const handlePause = () => setIsPlaying(false)
 
-  return (
-    <div
-      className={`sc-player sc-player--${position}${className ? ` ${className}` : ''}`}
-      style={cssVars}
-      role="region"
-      aria-label="SoundCloud Player"
-    >
-      {/* Hidden SoundCloud iframe */}
-      <iframe
-        ref={iframeRef}
-        className="sc-player__iframe"
-        src={resolvedEmbedUrl}
-        allow="autoplay"
-        title="SoundCloud Player (hidden)"
-        tabIndex={-1}
-      />
+        const handleSoundChange = () => {
+            widget.getCurrentSound((sound) => {
+                if (sound) {
+                    // Try to find the track in our local list to get its metadata
+                    const idx = tracksRef.current.findIndex((t) => t.id === sound.id)
+                    if (idx >= 0) {
+                        const track = tracksRef.current[idx]
+                        setActiveTrackIndex(idx)
 
-      {/* Error state */}
-      {widgetError && (
-        <div className="sc-player__error" role="alert">
-          <span>SoundCloud player unavailable. Please reload the page.</span>
-          <button
-            className="sc-player__error-close"
-            onClick={() => setWidgetError(false)}
-            aria-label="Close error message"
-          >
-            <IconClose />
-          </button>
-        </div>
-      )}
+                        if (durationTimeoutRef.current) clearTimeout(durationTimeoutRef.current)
+                        durationTimeoutRef.current = setTimeout(() => {
+                            // Prefer local duration if available, otherwise use widget duration
+                            if (track.duration) {
+                                setDuration(track.duration)
+                            } else {
+                                widget.getDuration((d) => setDuration(d))
+                            }
+                        }, 500)
+                        return
+                    }
 
-      {/* Player Bar */}
-      <div className="sc-player__bar">
-        {/* Track Info */}
-        <div className="sc-player__info">
-          <div className="sc-player__artwork">
-            {activeTrack ? (
-              <a
-                href={activeTrack.permalink_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={`View "${activeTrack.title}" on SoundCloud`}
-              >
-                {artworkUrl ? (
-                  <img
-                    src={artworkUrl}
-                    alt={activeTrack.title}
-                    loading="lazy"
-                    onError={(e) => {
-                      // Fallback to placeholder if image fails
-                      const target = e.currentTarget
-                      target.style.display = 'none'
-                      const placeholder = target.nextElementSibling
-                      if (placeholder instanceof HTMLElement)
-                        placeholder.style.display = 'flex'
-                    }}
-                  />
-                ) : null}
-                <div
-                  className="sc-player__artwork-placeholder"
-                  style={artworkUrl ? { display: 'none' } : undefined}
-                >
-                  <IconMusic />
-                </div>
-              </a>
-            ) : (
-              <div className="sc-player__artwork-placeholder">
-                <IconMusic />
-              </div>
-            )}
-          </div>
-          <div className="sc-player__text">
-            {activeTrack ? (
-              <a
-                href={activeTrack.permalink_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sc-player__title"
-                title={`View "${activeTrack.title}" on SoundCloud`}
-              >
-                {activeTrack.title}
-              </a>
-            ) : (
-              <div className="sc-player__title">No track selected</div>
-            )}
-            <div className="sc-player__artist">
-              {activeTrack ? (
-                <a
-                  href={activePlaylist.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`View ${activePlaylist.label} on SoundCloud`}
-                >
-                  {activeTrack.artist}
-                </a>
-              ) : (
-                ''
-              )}
-            </div>
-          </div>
-        </div>
+                    if (durationTimeoutRef.current) clearTimeout(durationTimeoutRef.current)
+                    durationTimeoutRef.current = setTimeout(() => {
+                        // Fallback to widget duration
+                        widget.getDuration((d) => setDuration(d))
+                    }, 500)
+                }
+            })
+        }
 
-        {/* Controls */}
-        <div className="sc-player__controls">
-          {showNavButtons && (
-            <>
-              <button
-                className="sc-player__btn sc-player__btn--prev"
-                onClick={prevTrack}
-                aria-label="Previous track"
-                disabled={activeTracks.length === 0}
-              >
-                <IconPrev />
-              </button>
-              <button
-                className="sc-player__btn sc-player__btn--play"
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                disabled={!widgetReady || activeTracks.length === 0}
-              >
-                {isPlaying ? <IconPause /> : <IconPlay />}
-              </button>
-              <button
-                className="sc-player__btn sc-player__btn--next"
-                onClick={nextTrack}
-                aria-label="Next track"
-                disabled={activeTracks.length === 0}
-              >
-                <IconNext />
-              </button>
-              <button
-                className={`sc-player__btn sc-player__btn--shuffle${isShuffle ? ' sc-player__btn--active' : ''}`}
-                onClick={() => setIsShuffle(!isShuffle)}
-                aria-label={isShuffle ? 'Disable shuffle' : 'Enable shuffle'}
-                aria-pressed={isShuffle}
-              >
-                <IconShuffle />
-              </button>
-            </>
-          )}
+        const handleFinish = () => {
+            // Call nextTrack
+            // We use a delayed call to avoid widget state conflicts
+            setTimeout(() => {
+                nextTrack()
+            }, 100)
+        }
 
-          {showPlaylistSelect && playlistKeys.length > 1 && (
-            <select
-              className="sc-player__select"
-              value={browsingPlaylistKey}
-              onChange={handlePlaylistChange}
-              aria-label="Select playlist"
-            >
-              {playlistKeys.map((key) => (
-                <option key={key} value={key}>
-                  {playlists[key].label}
-                </option>
-              ))}
-            </select>
-          )}
+        const handleError = () => {
+            setWidgetError(true)
+        }
 
-          {/* Volume Control */}
-          <div className="sc-player__volume" ref={volumeRef}>
-            <button
-              className="sc-player__btn sc-player__btn--volume"
-              onClick={() => setShowVolumeSlider(!showVolumeSlider)}
-              onContextMenu={(e) => {
-                e.preventDefault()
-                toggleMute()
-              }}
-              aria-label={volume === 0 ? 'Unmute' : 'Mute'}
-            >
-              <IconVolume volume={volume} />
-            </button>
-            {showVolumeSlider && (
-              <div className="sc-player__volume-slider">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={volume}
-                  onChange={handleVolumeChange}
-                  aria-label="Volume"
-                />
-              </div>
-            )}
-          </div>
-        </div>
+        const events = window.SC.Widget?.Events
+        if (!events) return
 
-        {/* Progress Bar */}
-        {showProgress && (
-          <div
-            className="sc-player__progress"
-            onMouseDown={handleMouseDown}
-            onTouchStart={(e) => {
-              isDraggingRef.current = true
-              setIsDragging(true)
-              handleSeek(e)
-            }}
-            role="slider"
-            aria-label="Playback progress"
-            aria-valuenow={Math.round(progress)}
-            aria-valuemin={0}
-            aria-valuemax={Math.max(duration, 1)}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (!widgetRef.current || !duration) return
-              const step = duration * 0.02 // 2% steps
-              if (e.key === 'ArrowRight') {
-                widgetRef.current.seekTo(Math.min(duration, progress + step))
-              } else if (e.key === 'ArrowLeft') {
-                widgetRef.current.seekTo(Math.max(0, progress - step))
-              }
-            }}
-          >
-            <div
-              className="sc-player__progress-fill"
-              style={{ width: `${progressPct}%` }}
-              aria-hidden="true"
-            />
-            <div
-              className="sc-player__progress-handle"
-              style={{ left: `${progressPct}%` }}
-              aria-hidden="true"
-            />
-            <span className="sc-player__sr-only">
-              {formatTime(progress)} of {formatTime(duration)}
-            </span>
-          </div>
-        )}
+        widget.bind(events.READY, handleReady)
+        widget.bind(events.PLAY, handlePlay)
+        widget.bind(events.PAUSE, handlePause)
+        widget.bind(events.SOUND_CHANGE, handleSoundChange)
+        widget.bind(events.FINISH, handleFinish)
+        widget.bind(events.ERROR, handleError)
 
-        {/* Track List Toggle */}
-        {showTrackList && browsingTracks.length > 0 && (
-          <button
-            className="sc-player__tracks-btn"
-            onClick={() => setShowTracks((prev) => !prev)}
-            aria-label={showTracks ? 'Hide track list' : 'Show track list'}
-            aria-expanded={showTracks}
-            aria-controls="sc-player-track-list"
-          >
-            <span className="sc-player__tracks-btn-icon" aria-hidden="true">
-              {showTracks ? (
-                <IconClose />
-              ) : (
-                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-                </svg>
-              )}
-            </span>
-            <span className="sc-player__tracks-count">{browsingTracks.length}</span>
-          </button>
-        )}
+        return () => {
+            try {
+                widget.unbind(events.READY)
+                widget.unbind(events.PLAY)
+                widget.unbind(events.PAUSE)
+                widget.unbind(events.SOUND_CHANGE)
+                widget.unbind(events.FINISH)
+                widget.unbind(events.ERROR)
+            } catch {
+                // Widget may already be destroyed — ignore
+            }
+        }
+        // Only re-init when embed URL changes or script loads
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [resolvedEmbedUrl, scriptLoaded])
 
-        {/* SoundCloud Logo */}
-        <a
-          href={scAccountUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="sc-player__logo"
-          aria-label="Visit our SoundCloud"
+    // Progress polling
+    useEffect(() => {
+        if (!widgetReady || !widgetRef.current || !isPlaying) {
+            if (progressTimerRef.current) {
+                clearInterval(progressTimerRef.current)
+                progressTimerRef.current = null
+            }
+            return
+        }
+
+        progressTimerRef.current = setInterval(() => {
+            if (isDraggingRef.current) return
+            widgetRef.current?.getPosition((pos) => {
+                setProgress(pos)
+            })
+        }, 500)
+
+        return () => {
+            if (progressTimerRef.current) {
+                clearInterval(progressTimerRef.current)
+                progressTimerRef.current = null
+            }
+        }
+    }, [widgetReady, isPlaying])
+
+    useEffect(() => {
+        return () => {
+            if (durationTimeoutRef.current) {
+                clearTimeout(durationTimeoutRef.current)
+                durationTimeoutRef.current = null
+            }
+        }
+    }, [])
+
+    // Navigate to a specific track
+    const navigateToTrack = useCallback(
+        (index: number, playlistKeyOverride?: string) => {
+            const targetPlaylistKey = playlistKeyOverride || browsingPlaylistKey
+            const targetTracks = playlists[targetPlaylistKey]?.tracks ?? []
+            const track = targetTracks[index]
+            if (!track?.permalink_url || !widgetRef.current) return
+
+            setActivePlaylistKey(targetPlaylistKey)
+            setActiveTrackIndex(index)
+            setProgress(0)
+
+            if (durationTimeoutRef.current) clearTimeout(durationTimeoutRef.current)
+            if (track.duration) {
+                durationTimeoutRef.current = setTimeout(() => {
+                    setDuration(track.duration!)
+                }, 500)
+            }
+
+            try {
+                widgetRef.current.load(track.permalink_url)
+            } catch {
+                // Widget error — graceful fallback
+                return
+            }
+
+            if (autoplayOnSelect) {
+                const attemptPlay = (retries: number) => {
+                    setTimeout(() => {
+                        try {
+                            widgetRef.current?.play()
+                        } catch {
+                            if (retries > 0) {
+                                attemptPlay(retries - 1)
+                            } else {
+                                setIsPlaying(false)
+                            }
+                        }
+                    }, autoplayDelay * (4 - retries)) // Increasing delay per retry
+                }
+                attemptPlay(3)
+            }
+        },
+        [browsingPlaylistKey, browsingTracks, autoplayOnSelect, autoplayDelay]
+    )
+
+    // Toggle play/pause
+    const togglePlay = useCallback(() => {
+        if (!widgetRef.current) return
+        try {
+            if (isPlaying) {
+                widgetRef.current.pause()
+            } else {
+                widgetRef.current.play()
+            }
+        } catch (err) {
+            console.error('SCPlayer: Error toggling playback', err)
+        }
+    }, [isPlaying])
+
+    // Previous track
+    const prevTrack = useCallback(() => {
+        const currentIndex = indexRef.current
+        const currentPlaylistKey = activePlaylistKeyRef.current
+
+        if (currentIndex > 0) {
+            navigateToTrack(currentIndex - 1, currentPlaylistKey)
+        } else {
+            try {
+                widgetRef.current?.prev()
+            } catch {
+                // Widget not ready
+            }
+        }
+    }, [navigateToTrack])
+
+    // Next track
+    const nextTrack = useCallback(() => {
+        const currentTracks = tracksRef.current
+        const currentIndex = indexRef.current
+        const currentPlaylistKey = activePlaylistKeyRef.current
+
+        if (currentIndex < currentTracks.length - 1) {
+            navigateToTrack(currentIndex + 1, currentPlaylistKey)
+        } else {
+            try {
+                widgetRef.current?.next()
+            } catch {
+                // Widget not ready
+            }
+        }
+    }, [navigateToTrack])
+
+    // Play a random track from a random playlist
+    const playRandomTrack = useCallback(() => {
+        const keys = Object.keys(playlists)
+        const randomPlaylistKey = keys[Math.floor(Math.random() * keys.length)]
+        const randomPlaylist = playlists[randomPlaylistKey]
+        const randomTracks = randomPlaylist?.tracks ?? []
+
+        if (randomTracks.length > 0) {
+            const randomIndex = Math.floor(Math.random() * randomTracks.length)
+            navigateToTrack(randomIndex, randomPlaylistKey)
+            setBrowsingPlaylistKey(randomPlaylistKey)
+        }
+    }, [playlists, navigateToTrack])
+
+    // Computed values
+    const progressPct = duration > 0 ? (progress / duration) * 100 : 0
+    const artworkUrl = activeTrack?.artwork_url
+        ? activeTrack.artwork_url.replace('-large', '-t500x500')
+        : null
+
+    return (
+        <div
+            className={`sc-player sc-player--${position}${className ? ` ${className}` : ''}`}
+            style={cssVars}
+            role="region"
+            aria-label="SoundCloud Player"
         >
-          <img src={scLogo} alt="SoundCloud" />
-        </a>
-      </div>
+            {/* Hidden SoundCloud iframe */}
+            <iframe
+                ref={iframeRef}
+                className="sc-player__iframe"
+                src={resolvedEmbedUrl}
+                allow="autoplay; encrypted-media"
+                title="SoundCloud Player (hidden)"
+                tabIndex={-1}
+            />
 
-      {/* Track List Panel */}
-      {showTrackList && (
-        <ul
-          id="sc-player-track-list"
-          className={`sc-player__tracks${showTracks ? ' sc-player__tracks--open' : ''}`}
-          aria-label="Track list"
-        >
-          {browsingTracks.map((track, i) => {
-            const isActive = browsingPlaylistKey === activePlaylistKey && i === activeTrackIndex
-            return (
-              <li key={`${track.id}-${i}`} className="sc-player__track-item">
-                <button
-                  className={`sc-player__track${isActive ? ' active' : ''}`}
-                  onClick={() => navigateToTrack(i)}
-                  aria-current={isActive && isPlaying ? 'true' : undefined}
-                >
-                  <span className="sc-player__track-num" aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  <span className="sc-player__track-title">{track.title}</span>
-                  <span className="sc-player__track-dur">
-                    {formatTime(track.duration)}
-                  </span>
-                  {isActive && isPlaying && (
-                    <span
-                      className="sc-player__playing"
-                      aria-label="Currently playing"
+            {/* Error state */}
+            {widgetError && (
+                <div className="sc-player__error" role="alert">
+                    <span>SoundCloud player unavailable. Please reload the page.</span>
+                    <button
+                        type="button"
+                        className="sc-player__error-close"
+                        onClick={() => setWidgetError(false)}
+                        aria-label="Close error message"
                     >
-                      ♫
-                    </span>
-                  )}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </div>
-  )
+                        <IconClose size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Player Bar */}
+            <div className="sc-player__bar">
+                <div className="sc-player__bar-desktop">
+                    <div className="sc-player__bar-left">
+                        {/* Track Info */}
+                        <div className="sc-player__info">
+                            <div className="sc-player__artwork">
+                                {activeTrack ? (
+                                    <a
+                                        href={activeTrack.permalink_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="View on SoundCloud"
+                                    >
+                                        {artworkUrl ? (
+                                            <img
+                                                src={artworkUrl}
+                                                alt=""
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    // Fallback to placeholder if image fails
+                                                    const target = e.currentTarget
+                                                    target.style.display = 'none'
+                                                    const placeholder = target.nextElementSibling
+                                                    if (placeholder instanceof HTMLElement)
+                                                        placeholder.style.display = 'flex'
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="sc-player__artwork-placeholder"
+                                            style={artworkUrl ? { display: 'none' } : undefined}
+                                        >
+                                            <IconMusic />
+                                        </div>
+                                    </a>
+                                ) : (
+                                    <div className="sc-player__artwork-placeholder">
+                                        <IconMusic />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="sc-player__text">
+                                {activeTrack ? (
+                                    <a
+                                        href={activeTrack.permalink_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="sc-player__title"
+                                        title="View on SoundCloud"
+                                    >
+                                        {activeTrack.title}
+                                    </a>
+                                ) : (
+                                    <div className="sc-player__title">No track selected</div>
+                                )}
+                                <div className="sc-player__artist">
+                                    {activeTrack ? (
+                                        <a
+                                            href={activePlaylist.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title={`View ${activePlaylist.label} on SoundCloud`}
+                                        >
+                                            {activeTrack.artist}
+                                        </a>
+                                    ) : (
+                                        ''
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="sc-player__bar-center">
+                        {/* Controls */}
+                        <div className="sc-player__controls">
+                            {showNavButtons && (
+                                <>
+                                    <div className="sc-player__controls-side sc-player__controls-side--left">
+                                        <button
+                                            type="button"
+                                            className="sc-player__btn"
+                                            onClick={playRandomTrack}
+                                            title="Play Random Track"
+                                            aria-label="Play Random Track"
+                                        >
+                                            <IconShuffle />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="sc-player__btn"
+                                            onClick={prevTrack}
+                                            disabled={activeTracks.length === 0}
+                                            aria-label="Previous track"
+                                        >
+                                            <IconChevronLeft />
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="sc-player__btn scp-play-button"
+                                        onClick={togglePlay}
+                                        disabled={!widgetReady || activeTracks.length === 0}
+                                        aria-label={isPlaying ? "Pause" : "Play"}
+                                        style={{
+                                            backgroundColor: 'var(--scp-accent)',
+                                        } as React.CSSProperties}
+                                    >
+                                        {isPlaying ? <IconPause /> : <IconPlay />}
+                                    </button>
+                                    <div className="sc-player__controls-side sc-player__controls-side--right">
+                                        <button
+                                            type="button"
+                                            className="sc-player__btn"
+                                            onClick={nextTrack}
+                                            disabled={activeTracks.length === 0}
+                                            aria-label="Next track"
+                                        >
+                                            <IconChevronRight />
+                                        </button>
+                                        <div className="sc-player__volume" ref={volumeRef}>
+                                            <button
+                                                type="button"
+                                                className="sc-player__btn"
+                                                onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+                                                title="Volume"
+                                                aria-label="Volume settings"
+                                            >
+                                                <IconVolume volume={volume} />
+                                            </button>
+                                            {showVolumeSlider && (
+                                                <div className="sc-player__volume-popover">
+                                                    <div className="sc-player__volume-slider-container">
+                                                        <input
+                                                            type="range"
+                                                            min="0"
+                                                            max="100"
+                                                            step="1"
+                                                            value={volume}
+                                                            onChange={(e) => {
+                                                                const newVol = parseInt(e.target.value, 10)
+                                                                setVolume(newVol)
+                                                                if (newVol > 0) lastVolumeRef.current = newVol
+                                                            }}
+                                                            className="sc-player__volume-slider"
+                                                            aria-label="Volume"
+                                                            // @ts-ignore - non-standard attribute for vertical slider
+                                                            orient="vertical"
+                                                            style={{
+                                                                background: `linear-gradient(to top, var(--scp-accent) ${volume}%, rgba(187, 187, 187, 0.1) ${volume}%)`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="sc-player__volume-mute"
+                                                        onClick={() => {
+                                                            if (volume > 0) {
+                                                                lastVolumeRef.current = volume
+                                                                setVolume(0)
+                                                            } else {
+                                                                setVolume(lastVolumeRef.current)
+                                                            }
+                                                        }}
+                                                        title={volume === 0 ? "Unmute" : "Mute"}
+                                                        aria-label={volume === 0 ? "Unmute" : "Mute"}
+                                                    >
+                                                        <IconVolume volume={volume} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="sc-player__bar-right">
+                        {/* Progress Bar */}
+                        {showProgress && (
+                            <div className="sc-player__progress-container">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={duration || 1}
+                                    step="1"
+                                    value={progress}
+                                    onChange={(e) => {
+                                        const val = parseFloat(e.target.value)
+                                        setProgress(val)
+                                        widgetRef.current?.seekTo(val)
+                                    }}
+                                    onMouseDown={() => {
+                                        isDraggingRef.current = true
+                                    }}
+                                    onMouseUp={() => {
+                                        isDraggingRef.current = false
+                                    }}
+                                    onTouchStart={() => {
+                                        isDraggingRef.current = true
+                                    }}
+                                    onTouchEnd={() => {
+                                        isDraggingRef.current = false
+                                    }}
+                                    className="sc-player__progress-input"
+                                    aria-label="Playback progress"
+                                    style={{
+                                        background: `linear-gradient(to right, var(--scp-accent) ${progressPct}%, rgba(187, 187, 187, 0.1) ${progressPct}%)`
+                                    }}
+                                />
+                                <span className="sc-player__sr-only">
+                                    {formatTime(progress)} of {formatTime(duration)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Playlist Selection Toggle (Desktop) */}
+                        {showPlaylistSelect && playlistKeys.length > 1 && (
+                            <button
+                                type="button"
+                                className="sc-player__tracks-btn"
+                                onClick={() => setShowPlaylists(!showPlaylists)}
+                                aria-label="Toggle playlist menu"
+                            >
+                                <IconDropdown />
+                                <span className="sc-player__tracks-count">{getPlaylistLabel(playlists[browsingPlaylistKey].label)}</span>
+                            </button>
+                        )}
+                        {/* Track List Toggle */}
+                        {showTrackList && browsingTracks.length > 0 && (
+                            <button
+                                type="button"
+                                className="sc-player__tracks-btn"
+                                onClick={() => setShowTracks((prev) => !prev)}
+                                aria-label="Toggle track list"
+                            >
+                                <IconBurgerMenu />
+                                <span className="sc-player__tracks-count">{browsingTracks.length}</span>
+                            </button>
+                        )}
+
+                        {/* SoundCloud Logo */}
+                        <a
+                            href={scAccountUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="sc-player__logo"
+                            aria-label="Visit our SoundCloud"
+                        >
+                            <img src={logoBigWhite} alt="SoundCloud" />
+                        </a>
+                    </div>
+                </div>
+                {/* End of sc-player__bar-desktop */}
+
+                {/* Mobile Bar */}
+                <div className="sc-player__bar-mobile">
+                    {/* Progress Bar */}
+                    {showProgress && (
+                        <div className="sc-player__progress-container">
+                            <input
+                                type="range"
+                                min="0"
+                                max={duration || 1}
+                                step="1"
+                                value={progress}
+                                onChange={(e) => {
+                                    const val = parseFloat(e.target.value)
+                                    setProgress(val)
+                                    widgetRef.current?.seekTo(val)
+                                }}
+                                className="sc-player__progress-input"
+                                aria-label="Playback progress"
+                                style={{
+                                    background: `linear-gradient(to right, var(--scp-accent) ${progressPct}%, rgba(187, 187, 187, 0.1) ${progressPct}%)`
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Middle Row: Title */}
+                    <div className="sc-player__text-row" ref={rowRef}>
+                        <div className={`sc-player__marquee-inner${isOverflowing ? ' is-overflowing' : ''}`} ref={innerRef}>
+                            <div className="sc-player__title">
+                                {activeTrack ? activeTrack.title : 'No track selected'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bottom Row */}
+                    <div className="sc-player__bottom-row">
+                        {/* 1. Left Group: Track Image | Logo | Random Button */}
+                        <div className="sc-player__left-group">
+                            <div className="sc-player__artwork">
+                                {artworkUrl ? (
+                                    <a href={activeTrack?.permalink_url || '#'} target="_blank" rel="noopener noreferrer"><img src={artworkUrl} alt="" /></a>
+                                ) : <IconMusic />}
+                            </div>
+                            {/* Logo */}
+                            <a href={scAccountUrl} target="_blank" rel="noopener noreferrer" className="sc-player__logo">
+                                <img src={logoSmall} alt="SoundCloud" />
+                            </a>
+
+                            <button type="button" className="sc-player__btn" onClick={playRandomTrack}><IconShuffle /></button>
+                        </div>
+
+                        {/* 4. Player Controls (Prev | Play/Pause | Next) */}
+                        <div className="sc-player__controls-centered">
+                            <div className="sc-player__btn--prev">
+                                <button type="button" className="sc-player__btn" onClick={prevTrack} aria-label="Previous track"><IconChevronLeft /></button>
+                            </div>
+                            <div className="sc-player__btn--play">
+                                <button
+                                    type="button"
+                                    className="sc-player__btn scp-play-button"
+                                    onClick={togglePlay}
+                                    style={{
+                                        backgroundColor: 'var(--scp-accent)',
+                                    } as React.CSSProperties}
+                                >
+                                    {isPlaying ? <IconPause /> : <IconPlay />}
+                                </button>
+                            </div>
+                            <div className="sc-player__btn--next">
+                                <button type="button" className="sc-player__btn" onClick={nextTrack} aria-label="Next track"><IconChevronRight /></button>
+                            </div>
+                        </div>
+
+                        {/* 3. Right Group: Playlist Selection | Tracklist Menu */}
+                        <div className="sc-player__right-group">
+                            {showPlaylistSelect && playlistKeys.length > 1 && (
+                                <button
+                                    type="button"
+                                    className="sc-player__tracks-btn"
+                                    onClick={() => setShowPlaylists(!showPlaylists)}
+                                    aria-label="Toggle playlist menu"
+                                >
+                                    <IconDropdown />
+                                    <span className="sc-player__tracks-count">{getPlaylistLabel(playlists[browsingPlaylistKey].label)}</span>
+                                </button>
+                            )}
+
+                            {showTrackList && (
+                                <div className="sc-player__tracks-btn-mobile">
+                                    <button
+                                        type="button"
+                                        className="sc-player__tracks-btn"
+                                        onClick={() => setShowTracks(!showTracks)}
+                                        aria-label="Toggle track list"
+                                    >
+                                        <IconBurgerMenu />
+                                        <span className="sc-player__tracks-count">{browsingTracks.length}</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {showTrackList && (
+                <div
+                    id="sc-player-track-list"
+                    className={`sc-player__tracks${showTracks ? ' sc-player__tracks--open' : ''}`}
+                    role="list"
+                    aria-label="Track list"
+                >
+                    {browsingTracks.map((track, i) => {
+                        const isCurrentlyPlayingTrack = activeTrack?.id === track.id && activePlaylistKey === browsingPlaylistKey
+                        return (
+                            <button
+                                key={`${track.id}-${i}`}
+                                type="button"
+                                className={`sc-player__track${isCurrentlyPlayingTrack ? ' active' : ''}`}
+                                onClick={() => navigateToTrack(i)}
+                                role="listitem"
+                                aria-current={isCurrentlyPlayingTrack && isPlaying ? 'true' : undefined}
+                            >
+                                <span className="sc-player__track-num" aria-hidden="true">
+                                    {i + 1}
+                                </span>
+                                <span className="sc-player__track-title">{track.title}</span>
+                                {isCurrentlyPlayingTrack && isPlaying && (
+                                    <span
+                                        className="sc-player__playing"
+                                        aria-label="Currently playing"
+                                    >
+                                        ♫
+                                    </span>
+                                )}
+                                <span className="sc-player__track-dur">
+                                    {formatTime(track.duration)}
+                                </span>
+                            </button>
+                        )
+                    })}
+                </div>
+            )}
+
+            {/* Playlist Panel */}
+            {showPlaylists && (
+                <div
+                    id="sc-player-playlist-menu"
+                    className={`sc-player__playlists sc-player__tracks--open`}
+                    role="list"
+                    aria-label="Playlist menu"
+                >
+                    {playlistKeys.map((key) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className={`sc-player__track${browsingPlaylistKey === key ? ' active' : ''}`}
+                            onClick={() => {
+                                setBrowsingPlaylistKey(key);
+                                setShowPlaylists(false);
+                            }}
+                        >
+                            <span className="sc-player__track-title" style={{ whiteSpace: 'normal', overflow: 'visible' }}>{playlists[key].label}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
 }
+
+export default SCPlayer

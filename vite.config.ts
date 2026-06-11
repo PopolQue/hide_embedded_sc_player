@@ -6,10 +6,11 @@ export default defineConfig({
   plugins: [react()],
   root: '.',
   publicDir: false,
-  base: '/hide_embedded_sc_player/',
+  base: '/',
   server: {
     open: '/docs/index.html',
     port: 3000,
+    allowedHosts: "crescentlike-florencio-nonrustic.ngrok-free.dev",
   },
   build: {
     outDir: 'dist-demo',

@@ -1,6 +1,6 @@
 {
   "2025": {
-    "label": "KUH25",
+    "label": "KuH25",
     "playlistId": "soundcloud:playlists:2158762997",
     "url": "https://soundcloud.com/kleinundhaarig/sets/kuh-2025",
     "tracks": [
@@ -192,14 +192,30 @@
         "id": 2110263144,
         "title": "DJ Hybris",
         "artist": "KuH 2025",
-        "duration": 33890000,
+        "duration": 3569000,
         "artwork_url": "https://i1.sndcdn.com/artworks-SCfVBiPAJ6n35wE7-namEkw-t1080x1080.jpg",
         "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-hybris"
+      },
+      {
+        "id": 2119750635,
+        "title": "f.a.n.g.o.",
+        "artist": "KuH 2025",
+        "duration": 5270000,
+        "artwork_url": "https://i1.sndcdn.com/artworks-zyzR1B8nUdQizILa-9wBdaA-t1080x1080.jpg",
+        "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-fango"
+      },
+      {
+        "id": 2110515015,
+        "title": "Lys Finke",
+        "artist": "KuH 2025",
+        "duration": 8916000,
+        "artwork_url": "https://i1.sndcdn.com/artworks-bMbSTwfTA8gsCil3-92ug4g-t1080x1080.jpg",
+        "permalink_url": "https://soundcloud.com/kleinundhaarig/2025-lys"
       }
     ]
   },
   "2024": {
-    "label": "KUH24",
+    "label": "KuH24",
     "playlistId": "soundcloud:playlists:1839382410",
     "url": "https://soundcloud.com/kleinundhaarig/sets/kuh2024",
     "tracks": [
@@ -374,7 +390,7 @@
     ]
   },
   "2023": {
-    "label": "KUH23",
+    "label": "KuH23",
     "playlistId": "soundcloud:playlists:1687133382",
     "url": "https://soundcloud.com/kleinundhaarig/sets/rec-2023",
     "tracks": [
